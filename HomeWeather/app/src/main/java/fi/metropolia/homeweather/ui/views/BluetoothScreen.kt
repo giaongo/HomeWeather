@@ -1,4 +1,12 @@
 package fi.metropolia.homeweather.ui.views
 
-class BluetoothScreen {
-}
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+
+@Composable
+ fun BluetoothScreen() {
+    Column {
+        Text(text = "Bluetooth Screen")
+    }
+ }

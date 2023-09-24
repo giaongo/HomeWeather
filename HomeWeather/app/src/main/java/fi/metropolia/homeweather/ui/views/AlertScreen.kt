@@ -1,4 +1,9 @@
 package fi.metropolia.homeweather.ui.views
 
-class AlertScreen {
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+
+@Composable
+fun AlertScreen() {
+    Text(text = "Alert Screen")
 }
