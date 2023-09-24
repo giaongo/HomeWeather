@@ -1,4 +1,4 @@
-package fi.metropolia.homeweather
+package fi.metropolia.homeweather.ui.views
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -46,6 +46,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import fi.metropolia.homeweather.R
 import fi.metropolia.homeweather.ui.theme.HomeWeatherTheme
 import kotlinx.coroutines.launch
 
@@ -144,13 +145,7 @@ fun MainApp() {
                 })
             }) {
                 Column {
-                    Text(
-                        text = "Hii Learner",
-                        modifier = Modifier
-                            .padding(it)
-                            .fillMaxSize(),
-                        textAlign = TextAlign.Center
-                    )
+                    HomeScreen(modifier = Modifier.padding(it))
                 }
             }
 
@@ -159,7 +154,7 @@ fun MainApp() {
 }
 
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, widthDp = 400, heightDp = 500)
 @Composable
 fun MainAppPreview() {
     HomeWeatherTheme {
