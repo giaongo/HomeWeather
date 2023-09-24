@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,13 +11,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -43,9 +38,12 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import fi.metropolia.homeweather.R
 import fi.metropolia.homeweather.ui.theme.HomeWeatherTheme
 import kotlinx.coroutines.launch
@@ -74,22 +72,26 @@ fun MainApp() {
     var selectedItemIndex by rememberSaveable {
         mutableStateOf(0)
     }
+    val navController = rememberNavController()
 
     val items = listOf(
         DrawerItem(
             title = "Home",
             selectedIcon = Icons.Filled.Home,
             unselectedIcon = Icons.Outlined.Home,
+            navigationDestination = "home"
         ),
         DrawerItem(
-            title = "Notification",
-            selectedIcon = Icons.Filled.Info,
-            unselectedIcon = Icons.Outlined.Info,
+            title = "Bluetooth",
+            selectedIcon = ImageVector.vectorResource(id = R.drawable.bluetooth) ,
+            unselectedIcon = ImageVector.vectorResource(id = R.drawable.bluetooth),
+            navigationDestination = "bluetooth"
         ),
         DrawerItem(
-            title = "Favorites",
-            selectedIcon = Icons.Filled.Favorite,
-            unselectedIcon = Icons.Outlined.FavoriteBorder,
+            title = "NFC",
+            selectedIcon = ImageVector.vectorResource(id = R.drawable.nfc),
+            unselectedIcon = ImageVector.vectorResource(id = R.drawable.nfc),
+            navigationDestination = "nfc"
         ),
     )
     Surface {
@@ -113,6 +115,7 @@ fun MainApp() {
                             onClick = {
                                 selectedItemIndex = index
                                 scope.launch {
+                                    navController.navigate(drawerItem.navigationDestination)
                                     navigationState.close()
                                 }
                             },
@@ -144,8 +147,12 @@ fun MainApp() {
                     }
                 })
             }) {
-                Column {
-                    HomeScreen(modifier = Modifier.padding(it))
+                NavHost(navController = navController, startDestination = "home", modifier = Modifier.padding(it)) {
+                    composable("home") { HomeScreen()}
+                    composable("bluetooth") { BluetoothScreen()}
+                    composable("nfc") { NFCScreen()}
+                    composable("statistic") { StatisticScreen()}
+                    composable("alert") { AlertScreen()}
                 }
             }
 
@@ -165,5 +172,6 @@ fun MainAppPreview() {
 data class DrawerItem(
     val title: String,
     val selectedIcon: ImageVector,
-    val unselectedIcon: ImageVector
+    val unselectedIcon: ImageVector,
+    val navigationDestination:String
 )
