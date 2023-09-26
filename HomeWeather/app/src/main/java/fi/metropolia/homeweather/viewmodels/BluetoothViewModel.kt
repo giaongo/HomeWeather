@@ -31,7 +31,7 @@ class BluetoothViewModel(): ViewModel() {
                 .setReportDelay(0)
                 .build()
             scanner.startScan(null, settings, leScanCallback)
-            scannedLists.removeIf { scannedLists.size != 0 }
+            scannedLists.clear()
             delay(SCANNING_DURATION)
             scanner.stopScan(leScanCallback)
             scannedLists.addAll(scanResults.values)
