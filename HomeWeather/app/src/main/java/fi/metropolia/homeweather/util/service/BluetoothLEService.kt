@@ -19,6 +19,8 @@ import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import fi.metropolia.homeweather.R
 import fi.metropolia.homeweather.ui.views.MainActivity
 import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.BLUETOOTH_SERVICE_ID
@@ -29,12 +31,13 @@ import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.TEMPERA
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 @SuppressLint("MissingPermission")
-class BluetoothLEService(): Service() {
+class BluetoothLEService: Service() {
+    lateinit var bluetoothAdapter:BluetoothAdapter
     private val binder = LocalBinder()
     private var bluetoothGatt: BluetoothGatt? = null
-    var bleConnectedState: Boolean = false
-    lateinit var bluetoothAdapter:BluetoothAdapter
     private lateinit var serviceNotification: Notification
+    private var _connectedDevice = MutableLiveData<BluetoothDevice?>()
+    val connectedDevice: LiveData<BluetoothDevice?> = _connectedDevice
 
     private val gattClientCallback = object : BluetoothGattCallback() {
 
@@ -48,13 +51,12 @@ class BluetoothLEService(): Service() {
             when (newState) {
                 BluetoothProfile.STATE_CONNECTED -> {
                     Log.d(BLUETOOTH_TAG, "Connected GATT service")
-                    bleConnectedState = true
+                    _connectedDevice.postValue(gatt?.device)
                     gatt?.discoverServices()
                 }
 
                 BluetoothProfile.STATE_DISCONNECTED -> {
                     Log.d(BLUETOOTH_TAG, "disconnected GATT service")
-                    bleConnectedState = false
                 }
             }
         }
@@ -146,7 +148,7 @@ class BluetoothLEService(): Service() {
     /**
      * Initialize bluetoothAdapter
      */
-    fun initialize() {
+    private fun initialize() {
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothAdapter = bluetoothManager.adapter
     }
@@ -164,7 +166,7 @@ class BluetoothLEService(): Service() {
      * Connect BLE sensor
      */
     @SuppressLint("MissingPermission")
-    suspend fun connectBLE(device: BluetoothDevice, context: Context) {
+    fun connectBLE(device: BluetoothDevice, context: Context) {
         Log.d(BLUETOOTH_TAG,"connect ble called")
         try {
             bluetoothGatt = device.connectGatt(context, false,gattClientCallback)
@@ -172,6 +174,16 @@ class BluetoothLEService(): Service() {
             Log.e(BLUETOOTH_TAG, "unable to connect ${exception.localizedMessage}")
         }
     }
+
+    /**
+     * Disconnect BLE sensor
+     */
+    fun disconnectBLE() {
+        bluetoothGatt?.disconnect()
+        bluetoothGatt?.close()
+        _connectedDevice.postValue(null)
+    }
+
 
     override fun onBind(p0: Intent?): IBinder = binder
 
@@ -191,10 +203,7 @@ class BluetoothLEService(): Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        bluetoothGatt?.let {gatt ->
-            gatt.close()
-            bluetoothGatt = null
-        }
+        disconnectBLE()
     }
 
     inner class LocalBinder: Binder() {
