@@ -30,7 +30,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -49,6 +50,8 @@ import fi.metropolia.homeweather.ui.theme.HomeWeatherTheme
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    private val appViewModel by viewModels<AppViewModel>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -66,13 +69,14 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainApp() {
+fun MainApp(appViewModel: AppViewModel) {
     val navigationState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var selectedItemIndex by rememberSaveable {
         mutableStateOf(0)
     }
     val navController = rememberNavController()
+    val bluetoothLEService = appViewModel.bluetoothLEServiceLiveData.observeAsState()
 
     val items = listOf(
         DrawerItem(
@@ -164,8 +168,9 @@ fun MainApp() {
 @Preview(showBackground = true, widthDp = 400, heightDp = 500)
 @Composable
 fun MainAppPreview() {
+    val appViewModel = AppViewModel()
     HomeWeatherTheme {
-       MainApp()
+       MainApp(appViewModel = appViewModel)
     }
 }
 
