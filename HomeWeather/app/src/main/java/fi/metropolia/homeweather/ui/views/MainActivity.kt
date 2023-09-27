@@ -63,7 +63,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Start and bind Bluetooth Service
+        // Start and bind Bluetooth Background Service
         Intent(applicationContext,BluetoothLEService::class.java).apply {
             startForegroundService(this)
             bindService(this, serviceConnect, Context.BIND_AUTO_CREATE)
@@ -111,6 +111,8 @@ fun MainApp(appViewModel: AppViewModel) {
     }
     val navController = rememberNavController()
     val bluetoothLEService = appViewModel.bluetoothLEServiceLiveData.observeAsState()
+    val temperatureValue = bluetoothLEService.value?.temperature?.observeAsState()
+    val humidityValue = bluetoothLEService.value?.humidity?.observeAsState()
 
     val items = listOf(
         DrawerItem(
@@ -185,8 +187,10 @@ fun MainApp(appViewModel: AppViewModel) {
                     }
                 })
             }) {
-                NavHost(navController = navController, startDestination = "bluetooth", modifier = Modifier.padding(it)) {
-                    composable("home") { HomeScreen()}
+                NavHost(navController = navController, startDestination = "home", modifier = Modifier.padding(it)) {
+                    composable("home") {
+                        HomeScreen(temperature = temperatureValue?.value, humidity = humidityValue?.value)
+                    }
                     composable("bluetooth") { bluetoothLEService.value?.let { service ->
                         BluetoothScreen(service)
                     }}

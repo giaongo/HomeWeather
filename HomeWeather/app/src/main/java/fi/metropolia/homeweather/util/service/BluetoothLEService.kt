@@ -26,18 +26,30 @@ import fi.metropolia.homeweather.ui.views.MainActivity
 import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.BLUETOOTH_SERVICE_ID
 import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.BLUETOOTH_TAG
 import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.CLIENT_CHARACTERISTIC_CONFIG_UUID
+import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.HUMIDITY_MEASUREMENT_UUID
+import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.SENSOR_SERVICE_UUID
 import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.TEMPERATURE_MEASUREMENT_UUID
-import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.TEMPERATURE_SERVICE_UUID
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
+import java.time.LocalDateTime
+import java.util.Timer
+import kotlin.concurrent.timerTask
+import kotlin.random.Random
+
 @SuppressLint("MissingPermission")
 class BluetoothLEService: Service() {
     lateinit var bluetoothAdapter:BluetoothAdapter
     private val binder = LocalBinder()
     private var bluetoothGatt: BluetoothGatt? = null
     private lateinit var serviceNotification: Notification
+
     private var _connectedDevice = MutableLiveData<BluetoothDevice?>()
     val connectedDevice: LiveData<BluetoothDevice?> = _connectedDevice
+
+    private var _temperature = MutableLiveData<SensorMeasurement?>()
+    val temperature: LiveData<SensorMeasurement?> = _temperature
+
+    private var _humidity = MutableLiveData<SensorMeasurement?>()
+    val humidity: LiveData<SensorMeasurement?> = _humidity
+
 
     private val gattClientCallback = object : BluetoothGattCallback() {
 
@@ -184,6 +196,46 @@ class BluetoothLEService: Service() {
         _connectedDevice.postValue(null)
     }
 
+    /**
+     * Gives random sensor value for temperature and humidity
+     */
+    private fun mockSensorData() {
+        Log.d(BLUETOOTH_TAG, "mock sensor data is called")
+        val temperatureRandom = Random.nextDouble(-20.0, 40.0).toFloat()
+        val humidityRandom = Random.nextDouble(0.0,100.0).toFloat()
+        val currentTime = LocalDateTime.now()
+        _temperature.postValue(SensorMeasurement(temperatureRandom,currentTime))
+        _humidity.postValue(SensorMeasurement(humidityRandom, currentTime))
+    }
+
+    /**
+     * function to decode sensor byte array data from Bluetooth stream
+     */
+    private fun decodeSensorByteArray(fourBytes: ByteArray): Float{
+        return java.lang.Float.intBitsToFloat(
+            (fourBytes[3].toInt() and 0xFF shl 24) or
+                    (fourBytes[2].toInt() and 0xFF shl 16) or
+                    (fourBytes[1].toInt() and 0xFF shl 8) or
+                    (fourBytes[0].toInt() and 0xFF)
+        )
+    }
+
+    /**
+     * Set up characteristic notification
+     */
+    private fun enableCharacteristicNotification(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
+        val askNotificationResult =
+            gatt.setCharacteristicNotification(characteristic, true)
+        if (askNotificationResult) {
+            val descriptor =
+                characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID)
+            descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+            gatt.writeDescriptor(descriptor)
+            Log.d(BLUETOOTH_TAG, "Gatt notification enabled")
+        } else {
+            Log.d(BLUETOOTH_TAG, "Gatt notification not enabled")
+        }
+    }
 
     override fun onBind(p0: Intent?): IBinder = binder
 
@@ -191,6 +243,13 @@ class BluetoothLEService: Service() {
         super.onCreate()
         Log.d(BLUETOOTH_TAG, "Bluetooth service is created")
         initialize()
+
+        // if mock is enabled, provides mocked sensor value every 10 seconds
+        if(ENABLE_MOCK) {
+            Timer().scheduleAtFixedRate(timerTask {
+                mockSensorData()
+            },0L, 10000L)
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -233,4 +292,11 @@ class BluetoothLEService: Service() {
         notificationManager.createNotificationChannel(notificationChannel)
         return notification
     }
+
+    companion object {
+        const val ENABLE_MOCK: Boolean = true
+    }
+
 }
+
+data class SensorMeasurement(val value: Float, val timeStamp: LocalDateTime)
