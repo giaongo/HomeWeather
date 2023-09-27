@@ -84,30 +84,16 @@ class BluetoothLEService: Service() {
             for (gattService in gatt.services) {
                 Log.d(BLUETOOTH_TAG, "Service: ${gattService.type} ${gattService.uuid}")
                 // Find temperature service
-                if (gattService.uuid == TEMPERATURE_SERVICE_UUID) {
-                    Log.d(BLUETOOTH_TAG, "Found temperature service")
+                if (gattService.uuid == SENSOR_SERVICE_UUID) {
+                    val currentGattService = gatt.getService(SENSOR_SERVICE_UUID)
 
                     // get temperature characteristic
-                    val characteristic = gatt.getService(TEMPERATURE_SERVICE_UUID)
+                    val characteristicTemperature = currentGattService
                         .getCharacteristic(TEMPERATURE_MEASUREMENT_UUID)
 
-                    // set up notification
-                    val askNotificationResult =
-                        gatt.setCharacteristicNotification(characteristic, true)
-                    if (askNotificationResult) {
-                        val descriptor =
-                            characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID)
-                        descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                        gatt.writeDescriptor(descriptor)
-                        Log.d(BLUETOOTH_TAG, "Gatt notification enabled")
-                    } else {
-                        Log.d(BLUETOOTH_TAG, "Gatt notification not enabled")
-                    }
-                    // read characteristic
-                    if(characteristic.isReadable()) {
-                        Log.d(BLUETOOTH_TAG, "Gatt characteristic is not readable")
-                        gatt.readCharacteristic(characteristic)
-                    }
+                    // enable temperature notification
+                    enableCharacteristicNotification(gatt, characteristicTemperature)
+
                 }
             }
         }
@@ -133,26 +119,46 @@ class BluetoothLEService: Service() {
             status: Int
         ) {
             super.onCharacteristicRead(gatt, characteristic, status)
-//        onCharacteristicRead(gatt!!, characteristic!!, characteristic.value, status)
-            Log.d(BLUETOOTH_TAG, "onCharacteristicRead read")
             if(status == BluetoothGatt.GATT_SUCCESS) {
-                Log.d(BLUETOOTH_TAG, "read successfully")
-                val fourBytes: ByteArray = characteristic!!.value
-                val numericalValue = (fourBytes[3].toInt() shl 24) +
-                        (fourBytes[2].toInt() shl 16) +
-                        (fourBytes[1].toInt() shl 8) +
-                        (fourBytes[0].toInt())
-                val nextValue = java.lang.Float.intBitsToFloat(
-                    (fourBytes[3].toInt() and 0xFF shl 24) or
-                            (fourBytes[2].toInt() and 0xFF shl 16) or
-                            (fourBytes[1].toInt() and 0xFF shl 8) or
-                            (fourBytes[0].toInt() and 0xFF)
-                )
-                val floatValue = ByteBuffer.wrap(fourBytes).order(ByteOrder.LITTLE_ENDIAN).float
-                Log.d(BLUETOOTH_TAG,"read value is ${nextValue}")
+                when(characteristic?.uuid) {
+                    TEMPERATURE_MEASUREMENT_UUID -> {
+                        val temperatureValue = decodeSensorByteArray(characteristic.value)
+                        Log.d(BLUETOOTH_TAG,"temperature value is $temperatureValue")
 
-            } else if (status == BluetoothGatt.GATT_FAILURE) {
-                Log.d(BLUETOOTH_TAG, "read value")
+                    }
+
+                    HUMIDITY_MEASUREMENT_UUID -> {
+                        val humidityValue = decodeSensorByteArray(characteristic.value)
+                        Log.d(BLUETOOTH_TAG,"humidity value is $humidityValue")
+                        gatt?.readCharacteristic(gatt.getService(SENSOR_SERVICE_UUID).getCharacteristic(TEMPERATURE_MEASUREMENT_UUID))
+                    }
+                }
+            }
+        }
+
+        override fun onDescriptorWrite(
+            gatt: BluetoothGatt?,
+            descriptor: BluetoothGattDescriptor?,
+            status: Int
+        ) {
+            if(status == BluetoothGatt.GATT_SUCCESS) {
+                if(descriptor?.characteristic == gatt?.getService(SENSOR_SERVICE_UUID)?.getCharacteristic(
+                        TEMPERATURE_MEASUREMENT_UUID)) {
+                    Log.d(BLUETOOTH_TAG,"onDescriptorWrite temperature finished")
+
+                    // get humidity characteristic
+                    val characteristicHumidity = gatt?.getService(SENSOR_SERVICE_UUID)
+                        ?.getCharacteristic(HUMIDITY_MEASUREMENT_UUID)
+
+                    // enable humidity notification
+                    gatt?.let { characteristicHumidity?.let { it1 ->
+                        enableCharacteristicNotification(it,
+                            it1
+                        )
+                    } }
+                } else {
+                    Log.d(BLUETOOTH_TAG,"onDescriptorWrite humidity finished")
+                }
             }
         }
     }
@@ -163,15 +169,6 @@ class BluetoothLEService: Service() {
     private fun initialize() {
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothAdapter = bluetoothManager.adapter
-    }
-
-    /**
-     * check if characteristic is readable
-     */
-    private fun BluetoothGattCharacteristic.isReadable():Boolean = containsProperty(BluetoothGattCharacteristic.PROPERTY_READ)
-
-    private fun BluetoothGattCharacteristic.containsProperty(property:Int):Boolean {
-        return properties and property != 0
     }
 
     /**
@@ -266,11 +263,12 @@ class BluetoothLEService: Service() {
     }
 
     inner class LocalBinder: Binder() {
+        // get the current instance of service class
         fun getService(): BluetoothLEService = this@BluetoothLEService
     }
 
     /**
-     * create a foreground notification to inform the user the running state of service
+     * create a foreground notification to inform the user about the running state of service
      */
     private fun addNotification(context: Context):Notification {
         val bluetoothChannel = "app_bluetooth_service"

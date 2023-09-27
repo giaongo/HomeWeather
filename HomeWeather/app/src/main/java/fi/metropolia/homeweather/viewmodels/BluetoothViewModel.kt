@@ -59,8 +59,11 @@ class BluetoothViewModel(): ViewModel() {
         const val SCANNING_DURATION = 3000L
         const val BLUETOOTH_TAG = "APP_BLUETOOTH"
         const val BLUETOOTH_SERVICE_ID = 1
-        val TEMPERATURE_SERVICE_UUID = convertFromInteger(0X180A)
+        val SENSOR_SERVICE_UUID = convertFromInteger(0X180A)
         val TEMPERATURE_MEASUREMENT_UUID = convertFromInteger(0x2A57)
+        val HUMIDITY_MEASUREMENT_UUID = convertFromInteger(0x2A58)
+
+
         val CLIENT_CHARACTERISTIC_CONFIG_UUID = convertFromInteger(0x2902)
 
         private fun convertFromInteger(i: Int): UUID {
