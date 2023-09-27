@@ -11,7 +11,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -24,12 +24,23 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import fi.metropolia.homeweather.R
+import fi.metropolia.homeweather.util.service.SensorMeasurement
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier) {
+fun HomeScreen(modifier: Modifier = Modifier,
+               temperature: SensorMeasurement?,
+               humidity: SensorMeasurement?) {
     var tabIndex by remember {
-        mutableStateOf(0)
+        mutableIntStateOf(0)
     }
+    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
+    val temperatureData = String.format("%.2f", temperature?.value ?: 0.0f)
+    val humidityData = String.format("%.2f", humidity?.value ?: 0.0f)
+    val temperatureTimeStamp = temperature?.timeStamp?.format(formatter) ?: "No Time"
+    val humidityTimeStamp = humidity?.timeStamp?.format(formatter) ?: "No Time"
+
     val titles = listOf("Temperature", "Humidity")
     Column(modifier = modifier) {
         TabRow(selectedTabIndex = tabIndex) {
@@ -54,7 +65,9 @@ fun HomeScreen(modifier: Modifier = Modifier) {
                 )
             }
         }
-        Text(text = "this is home screen")
+
+        Text(text = "Temperature is $temperatureData°C at $temperatureTimeStamp")
+        Text(text = "Humidity is $humidityData% at $humidityTimeStamp")
         CircleInfo()
     }
 }
@@ -94,5 +107,7 @@ fun CircleInfo() {
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
-    HomeScreen()
+    HomeScreen(
+        temperature = SensorMeasurement(50.0f, LocalDateTime.now()),
+        humidity = SensorMeasurement(100.0f, LocalDateTime.now()))
 }

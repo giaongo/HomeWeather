@@ -1,8 +1,14 @@
 package fi.metropolia.homeweather.ui.views
 
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.IBinder
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,7 +36,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -46,33 +53,66 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import fi.metropolia.homeweather.R
 import fi.metropolia.homeweather.ui.theme.HomeWeatherTheme
+import fi.metropolia.homeweather.util.service.BluetoothLEService
+import fi.metropolia.homeweather.viewmodels.AppViewModel
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+    private val appViewModel by viewModels<AppViewModel>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Start and bind Bluetooth Background Service
+        Intent(applicationContext,BluetoothLEService::class.java).apply {
+            startForegroundService(this)
+            bindService(this, serviceConnect, Context.BIND_AUTO_CREATE)
+        }
+
         setContent {
             HomeWeatherTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainApp()
+                    MainApp(appViewModel)
                 }
             }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Unbind bluetooth service
+        unbindService(serviceConnect)
+    }
+
+    /** Defines callbacks for service binding, passed to bindService().  */
+    private val serviceConnect: ServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName?, service: IBinder?) {
+            // bound to LocalService, cast the IBinder and get LocalService instance.
+            val binder = service as BluetoothLEService.LocalBinder
+            appViewModel.updateServiceLiveData(binder.getService())
+
+        }
+        override fun onServiceDisconnected(clasName: ComponentName?) {
+            appViewModel.updateServiceLiveData(null)
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainApp() {
+fun MainApp(appViewModel: AppViewModel) {
     val navigationState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var selectedItemIndex by rememberSaveable {
-        mutableStateOf(0)
+        mutableIntStateOf(0)
     }
     val navController = rememberNavController()
+    val bluetoothLEService = appViewModel.bluetoothLEServiceLiveData.observeAsState()
+    val temperatureValue = bluetoothLEService.value?.temperature?.observeAsState()
+    val humidityValue = bluetoothLEService.value?.humidity?.observeAsState()
 
     val items = listOf(
         DrawerItem(
@@ -148,8 +188,12 @@ fun MainApp() {
                 })
             }) {
                 NavHost(navController = navController, startDestination = "home", modifier = Modifier.padding(it)) {
-                    composable("home") { HomeScreen()}
-                    composable("bluetooth") { BluetoothScreen()}
+                    composable("home") {
+                        HomeScreen(temperature = temperatureValue?.value, humidity = humidityValue?.value)
+                    }
+                    composable("bluetooth") { bluetoothLEService.value?.let { service ->
+                        BluetoothScreen(service)
+                    }}
                     composable("nfc") { NFCScreen()}
                     composable("statistic") { StatisticScreen()}
                     composable("alert") { AlertScreen()}
@@ -164,8 +208,9 @@ fun MainApp() {
 @Preview(showBackground = true, widthDp = 400, heightDp = 500)
 @Composable
 fun MainAppPreview() {
+    val appViewModel = AppViewModel()
     HomeWeatherTheme {
-       MainApp()
+       MainApp(appViewModel = appViewModel)
     }
 }
 
