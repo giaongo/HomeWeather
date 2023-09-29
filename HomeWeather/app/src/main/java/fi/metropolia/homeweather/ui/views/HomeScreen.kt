@@ -57,10 +57,9 @@ fun HomeScreen(modifier: Modifier = Modifier,
 
                             1 -> Icon(
                                 painter = painterResource(id = R.drawable.humidity),
-                                contentDescription = "temperature tab"
+                                contentDescription = "humidity tab"
                             )
                         }
-
                     }
                 )
             }

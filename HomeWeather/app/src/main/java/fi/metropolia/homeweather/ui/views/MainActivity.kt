@@ -45,6 +45,7 @@ import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -93,7 +94,6 @@ class MainActivity : ComponentActivity() {
             // bound to LocalService, cast the IBinder and get LocalService instance.
             val binder = service as BluetoothLEService.LocalBinder
             appViewModel.updateServiceLiveData(binder.getService())
-
         }
         override fun onServiceDisconnected(clasName: ComponentName?) {
             appViewModel.updateServiceLiveData(null)
@@ -116,23 +116,29 @@ fun MainApp(appViewModel: AppViewModel) {
 
     val items = listOf(
         DrawerItem(
-            title = "Home",
+            title = stringResource(id = R.string.home_label),
             selectedIcon = Icons.Filled.Home,
             unselectedIcon = Icons.Outlined.Home,
             navigationDestination = "home"
         ),
         DrawerItem(
-            title = "Bluetooth",
+            title = stringResource(id = R.string.bluetooth_label),
             selectedIcon = ImageVector.vectorResource(id = R.drawable.bluetooth) ,
             unselectedIcon = ImageVector.vectorResource(id = R.drawable.bluetooth),
             navigationDestination = "bluetooth"
         ),
         DrawerItem(
-            title = "NFC",
+            title = stringResource(id = R.string.nfc_label),
             selectedIcon = ImageVector.vectorResource(id = R.drawable.nfc),
             unselectedIcon = ImageVector.vectorResource(id = R.drawable.nfc),
             navigationDestination = "nfc"
         ),
+        DrawerItem(
+            title = "Alert",
+            selectedIcon = ImageVector.vectorResource(id = R.drawable.notification_filled),
+            unselectedIcon = ImageVector.vectorResource(id = R.drawable.notification_outline),
+            navigationDestination = "alert"
+        )
     )
     Surface {
         ModalNavigationDrawer(
@@ -176,7 +182,7 @@ fun MainApp(appViewModel: AppViewModel) {
         ) {
             Scaffold(topBar = {
                 TopAppBar(title = {
-                    Text(text = "HomeWeather")
+                    Text(text = items[selectedItemIndex].title)
                 }, navigationIcon = {
                     IconButton(onClick = {
                         scope.launch {
