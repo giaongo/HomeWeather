@@ -292,7 +292,7 @@ class BluetoothLEService: Service() {
     }
 
     companion object {
-        const val ENABLE_MOCK: Boolean = false
+        const val ENABLE_MOCK: Boolean = true
     }
 
 }

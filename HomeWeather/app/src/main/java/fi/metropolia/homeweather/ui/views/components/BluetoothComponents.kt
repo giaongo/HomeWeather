@@ -3,6 +3,7 @@ package fi.metropolia.homeweather.ui.views.components
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanResult
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -61,9 +62,8 @@ fun PermissionHandler(
             content()
         }
         permissionState.shouldShowRationale -> {
-            // TODO: Show rationale if necessary
-            // You can use AlertDialog or any other UI component here
-            // And request permission again upon user's action
+            Toast.makeText(LocalContext.current, "Bluetooth and location permissions are required to launch the app",
+                Toast.LENGTH_SHORT).show()
         }
         else -> {
             // Permission denied
