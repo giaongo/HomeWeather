@@ -57,6 +57,11 @@ import fi.metropolia.homeweather.viewmodels.BluetoothViewModel
                     BluetoothConnectedDeviceCard(
                         bluetoothDevice = device,
                         bluetoothLEService = bluetoothLEService)
+                    bluetoothViewModel.scannedLists.filter {
+                        it.device.address == device.address
+                    }.forEach {
+                        bluetoothViewModel.scannedLists.remove(it)
+                    }
                 }
             }
 

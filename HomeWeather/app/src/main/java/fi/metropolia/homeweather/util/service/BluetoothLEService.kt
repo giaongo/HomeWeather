@@ -119,17 +119,17 @@ class BluetoothLEService: Service() {
             status: Int
         ) {
             super.onCharacteristicRead(gatt, characteristic, status)
-            if(status == BluetoothGatt.GATT_SUCCESS) {
+            if(status == BluetoothGatt.GATT_SUCCESS && !ENABLE_MOCK) {
+                val decodedValue = characteristic?.let { decodeSensorByteArray(it.value) }
                 when(characteristic?.uuid) {
                     TEMPERATURE_MEASUREMENT_UUID -> {
-                        val temperatureValue = decodeSensorByteArray(characteristic.value)
-                        Log.d(BLUETOOTH_TAG,"temperature value is $temperatureValue")
-
+                        Log.d(BLUETOOTH_TAG,"temperature value is $decodedValue")
+                        _temperature.postValue(SensorMeasurement(decodedValue ?: 0.0f, LocalDateTime.now()))
                     }
 
                     HUMIDITY_MEASUREMENT_UUID -> {
-                        val humidityValue = decodeSensorByteArray(characteristic.value)
-                        Log.d(BLUETOOTH_TAG,"humidity value is $humidityValue")
+                        Log.d(BLUETOOTH_TAG,"humidity value is $decodedValue")
+                        _humidity.postValue(SensorMeasurement(decodedValue ?: 0.0f, LocalDateTime.now()))
                         gatt?.readCharacteristic(gatt.getService(SENSOR_SERVICE_UUID).getCharacteristic(TEMPERATURE_MEASUREMENT_UUID))
                     }
                 }
@@ -245,7 +245,7 @@ class BluetoothLEService: Service() {
         if(ENABLE_MOCK) {
             Timer().scheduleAtFixedRate(timerTask {
                 mockSensorData()
-            },0L, 10000L)
+            },0L, 60000L)
         }
     }
 
@@ -292,7 +292,7 @@ class BluetoothLEService: Service() {
     }
 
     companion object {
-        const val ENABLE_MOCK: Boolean = true
+        const val ENABLE_MOCK: Boolean = false
     }
 
 }
