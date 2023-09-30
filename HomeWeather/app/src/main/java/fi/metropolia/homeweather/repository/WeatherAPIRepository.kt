@@ -14,6 +14,7 @@ class WeatherAPIRepository {
     private val baseUrl = dotenv.get("BASE_URL")
     private val weatherAPIDataService : WeatherAPIDataService
     private val API_KEY = dotenv.get("API_KEY")
+    private val units = dotenv.get("UNITS")
     init {
         val retrofit = Retrofit.Builder()
             .baseUrl(baseUrl)
@@ -23,6 +24,6 @@ class WeatherAPIRepository {
     }
 
     suspend fun getWeatherData(lat: Double, long: Double): WeatherAPIDataResponse {
-        return weatherAPIDataService.getWeatherAPIData(lat = lat, long = long, apiKey = API_KEY)
+        return weatherAPIDataService.getWeatherAPIData(lat = lat, long = long, apiKey = API_KEY, units=units)
     }
 }

@@ -10,7 +10,7 @@ android {
     defaultConfig {
         applicationId "fi.metropolia.homeweather"
         minSdk 31
-        targetSdk 34
+        targetSdk 32
         versionCode 1
         versionName "1.0"
 
@@ -71,6 +71,16 @@ dependencies {
 
     // Permission
     implementation "com.google.accompanist:accompanist-permissions:0.23.1"
+
+    //retrofit
+    implementation "com.squareup.retrofit2:retrofit:2.9.0"
+    implementation "com.squareup.retrofit2:converter-gson:2.9.0"
+
+    //dotenv
+    implementation 'io.github.cdimascio:dotenv-kotlin:6.4.1'
+
+    //location
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
 
     // livedata
     implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_version"
