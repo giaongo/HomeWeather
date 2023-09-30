@@ -134,7 +134,7 @@ fun MainApp(appViewModel: AppViewModel) {
             navigationDestination = "nfc"
         ),
     )
-    Surface {
+    Surface () {
         ModalNavigationDrawer(
             drawerContent = {
                 ModalDrawerSheet {
