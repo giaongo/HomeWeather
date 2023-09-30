@@ -9,14 +9,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -26,6 +25,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,23 +35,30 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fi.metropolia.homeweather.R
 import fi.metropolia.homeweather.util.service.SensorMeasurement
+import fi.metropolia.homeweather.util.service.getUserLocation
 import fi.metropolia.homeweather.viewmodels.WeatherAPIViewModel
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier,
                temperature: SensorMeasurement?,
-               humidity: SensorMeasurement?) {
-    val weatherAPIViewModel : WeatherAPIViewModel = viewModel()
+               humidity: SensorMeasurement?, ) {
     var tabIndex by remember {
         mutableIntStateOf(0)
     }
+    var context = LocalContext.current
     val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
     val temperatureData = String.format("%.2f", temperature?.value ?: 0.0f)
     val humidityData = String.format("%.2f", humidity?.value ?: 0.0f)
     val temperatureTimeStamp = temperature?.timeStamp?.format(formatter) ?: "No Time"
     val humidityTimeStamp = humidity?.timeStamp?.format(formatter) ?: "No Time"
+
+    var weatherApiViewModel : WeatherAPIViewModel = viewModel()
+
+    val measureTemp = weatherApiViewModel.measureTemp.observeAsState(initial = 15.0)
+    var userLocation = getUserLocation(context = context).value
+
+    weatherApiViewModel.getWeatherData(userLocation.latitude, userLocation.longitude)
 
     val titles = listOf("Temperature", "Humidity")
     Column(modifier = modifier) {
@@ -72,48 +79,30 @@ fun HomeScreen(modifier: Modifier = Modifier,
                                 contentDescription = "Humidity tab"
                             )
                         }
-
                     }
                 )
             }
         }
         Spacer(Modifier.height(30.dp))
-        LazyRow {
-            item {
-                weatherAPIViewModel.getWeatherData(
-                    lat = 60.16,
-                    long = 24.93
-                )
-            }
-        }
         Row (modifier = modifier
                 .fillMaxWidth()
         ) {
             displayTemperature(
                 fraction = 0.5F,
                 measureLocation = "Currently Inside",
-                temp = "$temperatureData°C"
+                measureTemp = "$temperatureData°C"
             )
             displayTemperature(
                 measureLocation = "Currently Outside",
-                temp = "15°C"
+                measureTemp = "${measureTemp.value}°C"
             )
-            Button(onClick = {
-                    weatherAPIViewModel.getWeatherData(
-                        lat = 60.16,
-                        long = 24.93
-                    )
-            })
-            {
-                Text("Fetch Weather Data")
-            }
         }
         CircleInfo()
     }
 }
 
 @Composable
-fun displayTemperature(fraction: Float = 1F, measureLocation: String, temp: String) {
+fun displayTemperature(fraction: Float = 1F, measureLocation: String, measureTemp: String) {
     Column (modifier = Modifier
         .fillMaxWidth(fraction = fraction)
         .drawBehind {
@@ -133,7 +122,8 @@ fun displayTemperature(fraction: Float = 1F, measureLocation: String, temp: Stri
             text = "$measureLocation",
             color = Color.Gray
         )
-        Text(text = "$temp",
+        Text(
+            text = "$measureTemp",
             fontSize = 30.sp,
             fontWeight = FontWeight.Bold
         )
