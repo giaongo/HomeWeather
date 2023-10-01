@@ -140,7 +140,7 @@ fun MainApp(appViewModel: AppViewModel) {
             navigationDestination = "statistic"
         ),
     )
-    Surface {
+    Surface () {
         ModalNavigationDrawer(
             drawerContent = {
                 ModalDrawerSheet {

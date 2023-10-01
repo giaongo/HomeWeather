@@ -2,6 +2,7 @@ package fi.metropolia.homeweather.ui.views
 
 import android.Manifest
 import android.annotation.SuppressLint
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
@@ -19,11 +21,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fi.metropolia.homeweather.ui.theme.HomeWeatherTheme
+import fi.metropolia.homeweather.ui.theme.gradient_button_1
+import fi.metropolia.homeweather.ui.theme.gradient_button_2
 import fi.metropolia.homeweather.ui.views.components.BluetoothConnectedDeviceCard
 import fi.metropolia.homeweather.ui.views.components.BluetoothScannedDeviceCard
 import fi.metropolia.homeweather.ui.views.components.PermissionHandler
@@ -57,6 +62,11 @@ import fi.metropolia.homeweather.viewmodels.BluetoothViewModel
                     BluetoothConnectedDeviceCard(
                         bluetoothDevice = device,
                         bluetoothLEService = bluetoothLEService)
+                    bluetoothViewModel.scannedLists.filter {
+                        it.device.address == device.address
+                    }.forEach {
+                        bluetoothViewModel.scannedLists.remove(it)
+                    }
                 }
             }
 
@@ -74,9 +84,21 @@ import fi.metropolia.homeweather.viewmodels.BluetoothViewModel
                 onClick = {
                     bluetoothViewModel.scanDevices(bluetoothLEService.bluetoothAdapter.bluetoothLeScanner)
                 },
-                modifier = Modifier.padding(16.dp)
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                modifier = Modifier
+                    .padding(16.dp)
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                gradient_button_1,
+                                gradient_button_2
+                            )
+                        ),
+                        shape = ButtonDefaults.shape
+                    ),
             ) {
-                Text(text = if (!bluetoothViewModel.fScanning) "Start Scanning" else "Stop Scanning")
+                Text(text = if (!bluetoothViewModel.fScanning) "START SCANNING" else "STOP SCANNING",
+                    color = Color.Black )
             }
             if (bluetoothViewModel.fScanning) {
                 CircularProgressIndicator(
