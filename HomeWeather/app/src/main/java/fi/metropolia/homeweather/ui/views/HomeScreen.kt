@@ -41,6 +41,29 @@ fun HomeScreen(modifier: Modifier = Modifier,
     val temperatureTimeStamp = temperature?.timeStamp?.format(formatter) ?: "No Time"
     val humidityTimeStamp = humidity?.timeStamp?.format(formatter) ?: "No Time"
 
+    // This is being used to upload temperature data to the firebase atm.
+    /*val db = FirebaseFirestore.getInstance()
+    val temp = temperature?.value?.let { Temperature(it, temperature.timeStamp.toString()) }
+    if (temp != null) {
+        db.collection("temperature").add(temp)
+    }*/
+
+    //This is being used to upload humidity data to the firebase atm
+   /* val db = FirebaseFirestore.getInstance()
+    val humidityFirebaseData = humidity?.value?.let { Humidity(it, humidity.timeStamp.toString()) }
+    if (humidityFirebaseData != null) {
+        db.collection("humidity").add(humidityFirebaseData)
+    }*/
+    // This is the way that will be implemented in future
+   /* val humidityFirebaseData = humidity?.value?.let { Humidity(it, humidity.timeStamp.toString()) }
+    GlobalScope.launch {
+        if (humidityFirebaseData != null) {
+            FireBaseTemperatureService.postHumidityData(humidityFirebaseData)
+        }
+    }*/
+
+
+
     val titles = listOf("Temperature", "Humidity")
     Column(modifier = modifier) {
         TabRow(selectedTabIndex = tabIndex) {
@@ -109,5 +132,6 @@ fun CircleInfo() {
 fun HomeScreenPreview() {
     HomeScreen(
         temperature = SensorMeasurement(50.0f, LocalDateTime.now()),
-        humidity = SensorMeasurement(100.0f, LocalDateTime.now()))
+        humidity = SensorMeasurement(100.0f, LocalDateTime.now())
+    )
 }

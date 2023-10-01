@@ -133,6 +133,12 @@ fun MainApp(appViewModel: AppViewModel) {
             unselectedIcon = ImageVector.vectorResource(id = R.drawable.nfc),
             navigationDestination = "nfc"
         ),
+        DrawerItem(
+            title = "Statistic",
+            selectedIcon = ImageVector.vectorResource(id = R.drawable.thermostat),
+            unselectedIcon = ImageVector.vectorResource(id = R.drawable.thermostat),
+            navigationDestination = "statistic"
+        ),
     )
     Surface {
         ModalNavigationDrawer(
