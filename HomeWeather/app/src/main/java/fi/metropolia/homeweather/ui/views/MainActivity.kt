@@ -140,7 +140,7 @@ fun MainApp(appViewModel: AppViewModel) {
             navigationDestination = "alert"
         )
     )
-    Surface {
+    Surface () {
         ModalNavigationDrawer(
             drawerContent = {
                 ModalDrawerSheet {
