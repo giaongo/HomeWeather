@@ -15,8 +15,8 @@ import com.google.android.gms.location.LocationServices
 import java.util.concurrent.TimeUnit
 
 data class LatandLong(
-    var latitude: Double = 0.0,
-    var longitude: Double = 0.0
+    var latitude: Double,
+    var longitude: Double
 )
 @SuppressLint("UnrememberedMutableState")
 @Composable
@@ -28,7 +28,7 @@ fun getUserLocation(context: Context): MutableState<LatandLong> {
     locationProvider = LocationServices.getFusedLocationProviderClient(context)
 
     var userLocation = remember {
-        mutableStateOf(LatandLong(0.0 ,0.0))
+        mutableStateOf(LatandLong(60.16 ,21.93))
     }
 
     DisposableEffect(key1 = locationProvider) {

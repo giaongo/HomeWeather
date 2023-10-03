@@ -3,10 +3,11 @@ package fi.metropolia.homeweather.util.service
 import retrofit2.http.GET
 import retrofit2.http.Query
 data class WeatherAPIDataResponse(
-    val main: WeatherAPITemp
+    val main: WeatherAPITempAndHumidity
 )
-data class WeatherAPITemp (
-    val temp: Double
+data class WeatherAPITempAndHumidity (
+    val temp: Double,
+    val humidity: Int
 )
 interface WeatherAPIDataService {
     @GET("weather")
