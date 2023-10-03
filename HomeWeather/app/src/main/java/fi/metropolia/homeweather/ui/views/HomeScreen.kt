@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -39,6 +41,8 @@ import fi.metropolia.homeweather.dataclass.Temperature
 import fi.metropolia.homeweather.viewmodels.WeatherAPIViewModel
 import getUserLocation
 import java.time.LocalDateTime
+import java.util.Timer
+import kotlin.concurrent.timerTask
 
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier,
@@ -73,13 +77,17 @@ fun HomeScreen(modifier: Modifier = Modifier,
         }
     }*/
 
-    val weatherApiViewModel : WeatherAPIViewModel = viewModel()
+    val weatherApiViewModel = viewModel<WeatherAPIViewModel>()
 
-    val measureTemp = weatherApiViewModel.measureTemp.observeAsState(initial = 15.0)
     val userLocation = getUserLocation(context = context).value
 
-    // TODO: To save your api free-tier -> I will comment out this code
-    // weatherApiViewModel.getWeatherData(userLocation.latitude, userLocation.longitude)
+    val measureTemp = weatherApiViewModel.measureTemp.observeAsState()
+    val measureHumidity = weatherApiViewModel.measureHumidity.observeAsState()
+
+    Timer().scheduleAtFixedRate(timerTask {
+        weatherApiViewModel.getWeatherData(userLocation.latitude, userLocation.longitude)
+    }, 0, 3600000L) //3600 seconds in milliseconds
+
 
     val titles = listOf("Temperature", "Humidity")
     Column(modifier = modifier) {
@@ -104,26 +112,48 @@ fun HomeScreen(modifier: Modifier = Modifier,
                 )
             }
         }
-        Spacer(Modifier.height(30.dp))
-        Row (modifier = modifier
-            .fillMaxWidth()
-        ) {
-            DisplayTemperature(
-                fraction = 0.5F,
-                measureLocation = "Currently Inside",
-                measureTemp = "$temperatureData°C"
+        if (tabIndex == 0) {
+            DisplayTabContent(
+                modifier = modifier,
+                sensorData = "$temperatureData°C",
+                weatherData = "${measureTemp.value.toString()}°C"
             )
-            DisplayTemperature(
-                measureLocation = "Currently Outside",
-                measureTemp = "${measureTemp.value}°C"
+            CircleInfo("$temperatureData°C", defineTempDescription(temperature))
+        } else {
+            DisplayTabContent(
+                modifier = modifier,
+                sensorData = "$humidityData %",
+                weatherData = "${measureHumidity.value.toString()} %"
             )
+            CircleInfo("$humidityData %", defineHumidityDescription(humidity))
         }
-        CircleInfo()
     }
 }
 
 @Composable
-fun DisplayTemperature(fraction: Float = 1F, measureLocation: String, measureTemp: String) {
+fun DisplayTabContent(
+    modifier: Modifier,
+    sensorData: String,
+    weatherData: String
+) {
+    Spacer(Modifier.height(30.dp))
+    Row (modifier = modifier
+        .fillMaxWidth()
+    ) {
+        DisplayWeatherInfo(
+            fraction = 0.5F,
+            measureLocation = "Currently Inside",
+            measureTemp = sensorData
+        )
+        DisplayWeatherInfo(
+            measureLocation = "Currently Outside",
+            measureTemp = weatherData
+        )
+    }
+}
+
+@Composable
+fun DisplayWeatherInfo(fraction: Float = 1F, measureLocation: String, measureTemp: String) {
     Column (modifier = Modifier
         .fillMaxWidth(fraction = fraction)
         .drawBehind {
@@ -152,20 +182,25 @@ fun DisplayTemperature(fraction: Float = 1F, measureLocation: String, measureTem
 }
 
 @Composable
-fun CircleInfo() {
+fun CircleInfo(currentlyInsideWeatherInfo: String, description: String) {
     Box(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
         contentAlignment = Alignment.Center
     ) {
-        val brush = Brush.horizontalGradient(listOf(Color.Red, Color.Blue))
+        val innerCircle = Brush.linearGradient(
+            colors = listOf((MaterialTheme.colorScheme.inversePrimary), MaterialTheme.colorScheme.background)
+        )
+        val outerCircle = Brush.linearGradient(
+            colors = listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.background)
+        )
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp),
             onDraw = {
-                drawCircle(brush)
+                drawCircle(outerCircle)
             }
         )
         Canvas(
@@ -173,15 +208,52 @@ fun CircleInfo() {
                 .fillMaxSize(0.8f)
                 .padding(16.dp),
             onDraw = {
-                drawCircle(Color.Blue)
+                drawCircle(innerCircle)
             }
         )
-        Text(text = "10*C", color = Color.Green, fontSize = 20.sp)
+        Column (
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = currentlyInsideWeatherInfo,
+                color = Color.Black,
+                fontSize = 40.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(20.dp))
+            Text(
+                text = description,
+                color = Color.Black,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Normal
+            )
+        }
     }
-
-
 }
 
+fun defineTempDescription(temperature: SensorMeasurement?): String {
+    val temp = temperature?.value ?: 0.0f
+    return if (temp > 0 && temp <= 15) {
+        "Cool"
+    } else if (temp > 15 && temp <= 30) {
+        "Warm"
+    } else if (temp > 30) {
+        "Hot"
+    } else {
+        "Freezing"
+    }
+}
+
+fun defineHumidityDescription(humidity: SensorMeasurement?) : String {
+    val humid = humidity?.value ?: 0.0f
+    return if (humid <= 30) {
+        "Dry"
+    } else if (humid > 30 && humid <= 60) {
+        "Standard"
+    } else {
+        "Moist"
+    }
+}
 
 @Preview(showBackground = true)
 @Composable
