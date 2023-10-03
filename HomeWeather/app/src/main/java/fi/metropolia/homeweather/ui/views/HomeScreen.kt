@@ -41,6 +41,9 @@ import fi.metropolia.homeweather.viewmodels.WeatherAPIViewModel
 import getUserLocation
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Timer
+import kotlin.concurrent.scheduleAtFixedRate
+import kotlin.concurrent.timerTask
 
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier,
@@ -79,10 +82,15 @@ fun HomeScreen(modifier: Modifier = Modifier,
 
     var weatherApiViewModel : WeatherAPIViewModel = viewModel()
 
-    val measureTemp = weatherApiViewModel.measureTemp.observeAsState(initial = 15.0)
     var userLocation = getUserLocation(context = context).value
 
-    weatherApiViewModel.getWeatherData(userLocation.latitude, userLocation.longitude)
+    val measureTemp = weatherApiViewModel.measureTemp.observeAsState()
+    val measureHumidity = weatherApiViewModel.measureHumidity.observeAsState()
+
+    Timer().scheduleAtFixedRate(timerTask {
+        weatherApiViewModel.getWeatherData(userLocation.latitude, userLocation.longitude)
+    }, 0, 3600000L) //3600 seconds in milliseconds
+
 
     val titles = listOf("Temperature", "Humidity")
     Column(modifier = modifier) {
@@ -107,26 +115,43 @@ fun HomeScreen(modifier: Modifier = Modifier,
                 )
             }
         }
-        Spacer(Modifier.height(30.dp))
-        Row (modifier = modifier
-            .fillMaxWidth()
-        ) {
-            displayTemperature(
-                fraction = 0.5F,
-                measureLocation = "Currently Inside",
-                measureTemp = "$temperatureData°C"
-            )
-            displayTemperature(
-                measureLocation = "Currently Outside",
-                measureTemp = "${measureTemp.value}°C"
-            )
+        if (tabIndex == 0) {
+            Spacer(Modifier.height(30.dp))
+            Row (modifier = modifier
+                .fillMaxWidth()
+            ) {
+                displayWeatherInfo(
+                    fraction = 0.5F,
+                    measureLocation = "Currently Inside",
+                    measureTemp = "$temperatureData°C"
+                )
+                displayWeatherInfo(
+                    measureLocation = "Currently Outside",
+                    measureTemp = "${measureTemp.value}°C"
+                )
+            }
+        } else {
+            Spacer(Modifier.height(30.dp))
+            Row (modifier = modifier
+                .fillMaxWidth()
+            ) {
+                displayWeatherInfo(
+                    fraction = 0.5F,
+                    measureLocation = "Currently Inside",
+                    measureTemp = "20%"
+                )
+                displayWeatherInfo(
+                    measureLocation = "Currently Outside",
+                    measureTemp = "${measureHumidity.value}%"
+                )
+            }
         }
         CircleInfo()
     }
 }
 
 @Composable
-fun displayTemperature(fraction: Float = 1F, measureLocation: String, measureTemp: String) {
+fun displayWeatherInfo(fraction: Float = 1F, measureLocation: String, measureTemp: String) {
     Column (modifier = Modifier
         .fillMaxWidth(fraction = fraction)
         .drawBehind {

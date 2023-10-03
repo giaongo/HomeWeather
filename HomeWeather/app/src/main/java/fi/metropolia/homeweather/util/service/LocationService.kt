@@ -18,6 +18,7 @@ data class LatandLong(
     var latitude: Double = 0.0,
     var longitude: Double = 0.0
 )
+val userLocation = mutableStateOf(LatandLong(0.0, 0.0))
 @SuppressLint("UnrememberedMutableState")
 @Composable
 fun getUserLocation(context: Context): MutableState<LatandLong> {

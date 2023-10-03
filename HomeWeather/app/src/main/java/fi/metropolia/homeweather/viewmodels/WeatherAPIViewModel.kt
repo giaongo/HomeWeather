@@ -15,8 +15,14 @@ class WeatherAPIViewModel() : ViewModel() {
     private val _measureTemp = MutableLiveData<Double>()
     val measureTemp: LiveData<Double> get() = _measureTemp
 
+    private val _measureHumidity = MutableLiveData<Int>()
+    val measureHumidity: LiveData<Int> get() = _measureHumidity
+
     private fun setTemp(value: Double) {
         _measureTemp.value = value
+    }
+    private fun setHumidity(value: Int) {
+        _measureHumidity.value = value
     }
 
     fun getWeatherData(lat: Double, long: Double) {
@@ -26,6 +32,7 @@ class WeatherAPIViewModel() : ViewModel() {
                 withContext(Dispatchers.Main) {
                     // Update the LiveData on the main thread
                     setTemp(response.main.temp)
+                    setHumidity(response.main.humidity)
                 }
             } catch (se: SecurityException) {
                 Log.e("WEATHER", "Failed to fetch weather Data.. $se")
