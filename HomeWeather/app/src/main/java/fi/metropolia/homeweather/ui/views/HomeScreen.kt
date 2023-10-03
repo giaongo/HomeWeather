@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -36,25 +34,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fi.metropolia.homeweather.R
-import fi.metropolia.homeweather.util.service.SensorMeasurement
+import fi.metropolia.homeweather.dataclass.Humidity
+import fi.metropolia.homeweather.dataclass.Temperature
 import fi.metropolia.homeweather.viewmodels.WeatherAPIViewModel
 import getUserLocation
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier,
-               temperature: SensorMeasurement?,
-               humidity: SensorMeasurement?, ) {
+               temperature: Temperature?,
+               humidity: Humidity?, ) {
     var tabIndex by remember {
         mutableIntStateOf(0)
     }
-    var context = LocalContext.current
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-    val temperatureData = String.format("%.2f", temperature?.value ?: 0.0f)
-    val humidityData = String.format("%.2f", humidity?.value ?: 0.0f)
-    val temperatureTimeStamp = temperature?.timeStamp?.format(formatter) ?: "No Time"
-    val humidityTimeStamp = humidity?.timeStamp?.format(formatter) ?: "No Time"
+    val context = LocalContext.current
+    val temperatureData = String.format("%.2f", temperature?.tempData ?: 0.0f)
+    val humidityData = String.format("%.2f", humidity?.humidityData ?: 0.0f)
+
 
     // This is being used to upload temperature data to the firebase atm.
     /*val db = FirebaseFirestore.getInstance()
@@ -77,12 +73,13 @@ fun HomeScreen(modifier: Modifier = Modifier,
         }
     }*/
 
-    var weatherApiViewModel : WeatherAPIViewModel = viewModel()
+    val weatherApiViewModel : WeatherAPIViewModel = viewModel()
 
     val measureTemp = weatherApiViewModel.measureTemp.observeAsState(initial = 15.0)
-    var userLocation = getUserLocation(context = context).value
+    val userLocation = getUserLocation(context = context).value
 
-    weatherApiViewModel.getWeatherData(userLocation.latitude, userLocation.longitude)
+    // TODO: To save your api free-tier -> I will comment out this code
+    // weatherApiViewModel.getWeatherData(userLocation.latitude, userLocation.longitude)
 
     val titles = listOf("Temperature", "Humidity")
     Column(modifier = modifier) {
@@ -111,12 +108,12 @@ fun HomeScreen(modifier: Modifier = Modifier,
         Row (modifier = modifier
             .fillMaxWidth()
         ) {
-            displayTemperature(
+            DisplayTemperature(
                 fraction = 0.5F,
                 measureLocation = "Currently Inside",
                 measureTemp = "$temperatureData°C"
             )
-            displayTemperature(
+            DisplayTemperature(
                 measureLocation = "Currently Outside",
                 measureTemp = "${measureTemp.value}°C"
             )
@@ -126,7 +123,7 @@ fun HomeScreen(modifier: Modifier = Modifier,
 }
 
 @Composable
-fun displayTemperature(fraction: Float = 1F, measureLocation: String, measureTemp: String) {
+fun DisplayTemperature(fraction: Float = 1F, measureLocation: String, measureTemp: String) {
     Column (modifier = Modifier
         .fillMaxWidth(fraction = fraction)
         .drawBehind {
@@ -143,11 +140,11 @@ fun displayTemperature(fraction: Float = 1F, measureLocation: String, measureTem
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "$measureLocation",
+            text = measureLocation,
             color = Color.Gray
         )
         Text(
-            text = "$measureTemp",
+            text = measureTemp,
             fontSize = 30.sp,
             fontWeight = FontWeight.Bold
         )
@@ -190,7 +187,7 @@ fun CircleInfo() {
 @Composable
 fun HomeScreenPreview() {
     HomeScreen(
-        temperature = SensorMeasurement(50.0f, LocalDateTime.now()),
-        humidity = SensorMeasurement(100.0f, LocalDateTime.now())
+        temperature = Temperature(50.0f, LocalDateTime.now().toString()),
+        humidity = Humidity(100.0f, LocalDateTime.now().toString())
     )
 }
