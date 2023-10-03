@@ -5,49 +5,56 @@ import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import fi.metropolia.homeweather.dataclass.Humidity
 import fi.metropolia.homeweather.dataclass.Temperature
-import fi.metropolia.homeweather.dataclass.VoiceAlert
 import kotlinx.coroutines.tasks.await
 
 object AppRepository {
     private const val TEMP_TAG = "FireBaseTemperatureService"
     private const val HUMIDITY_TAG = "FireBaseHumidityService"
+    private const val TAG = "FirebaseDataHandler"
 
     /**
-     * Post alert data to firebase
+     * Get all documents for 1 collection from Firebase
      */
-    suspend fun postAlertData(alert: VoiceAlert) {
+    suspend fun <T> getFirebaseData(collectionName: String, dataClass: Class<T>): List<T> {
         val db = FirebaseFirestore.getInstance()
-        val dbAlert = db.collection("alert")
-
-        dbAlert.add(alert).addOnSuccessListener { documentReference ->
-            println("DocumentSnapshot added with ID: ${documentReference.id}")
-        }
-        .addOnFailureListener { e ->
-            println("Error adding document $e")
-        }
-    }
-
-    /**
-     * Read alert data from firebase
-     */
-    suspend fun getAlertData(): List<VoiceAlert> {
-        val db = FirebaseFirestore.getInstance()
-        val data = mutableListOf<VoiceAlert>()
+        val data = mutableListOf<T>()
         try {
-            val querySnapshot = db.collection("alert").get().await()
+            val querySnapshot = db.collection(collectionName).get().await()
             for (document in querySnapshot) {
-                Log.d("Alert", "${document.id} => ${document.data}")
-                val myData: VoiceAlert = document.toObject(VoiceAlert::class.java)
+                val myData:T = document.toObject(dataClass)
                 data.add(myData)
             }
-            Log.d("AlertScreenViewModel", "Alert data: $data")
 
         } catch (e: Exception) {
-            Log.e("AlertScreenViewModel", "Error getting alert details")
+            Log.e(TAG, "Error getting $collectionName")
         }
         return data
     }
 
+    /**
+     * post document to Firebase
+     */
+    suspend fun postFirebaseData(collectionName: String, dataToPost:Any) {
+        val db = FirebaseFirestore.getInstance()
+        val dbCollection:CollectionReference = db.collection(collectionName)
+
+        dbCollection.add(dataToPost).addOnSuccessListener { documentReference ->
+            Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
+        }
+        .addOnFailureListener { e ->
+            Log.e(TAG,"Error adding document to $collectionName")
+        }
+    }
+
+
+    /**
+     * --------------------------------------
+     * TODO: Note for Anish
+     * Do you think if it is better to remove the below firebase functions for humidity and temperature.
+     * And instead utilizes the above generic functions for all cases. I have used the above generic ones
+     * for the alert and they seem to work fine.
+     * --------------------------------------
+     */
 
     /**
      * Get humidity data from firebase
@@ -123,8 +130,4 @@ object AppRepository {
             }
 
     }
-
-
-
-
 }

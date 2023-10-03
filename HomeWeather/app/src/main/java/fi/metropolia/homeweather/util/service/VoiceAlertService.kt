@@ -28,7 +28,7 @@ class VoiceAlertService(context: Context) {
     private fun speak(text: String) {
         textToSpeech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
         CoroutineScope(Dispatchers.IO).launch {
-            AppRepository.postAlertData(VoiceAlert(text, LocalDateTime.now().toString()))
+            AppRepository.postFirebaseData("alert", VoiceAlert(text, LocalDateTime.now().toString()))
         }
     }
 

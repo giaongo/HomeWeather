@@ -15,7 +15,7 @@ class AlertScreenViewModel: ViewModel() {
 
     init {
         viewModelScope.launch {
-            _alertData.value = AppRepository.getAlertData()
+            _alertData.value = AppRepository.getFirebaseData("alert", VoiceAlert::class.java)
         }
     }
 

@@ -38,6 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import fi.metropolia.homeweather.dataclass.VoiceAlert
 import fi.metropolia.homeweather.ui.theme.bluetooth_connected_card_bg
+import fi.metropolia.homeweather.ui.theme.gradient_alert
 import fi.metropolia.homeweather.viewmodels.AlertScreenViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -118,7 +119,7 @@ fun AlertCard(message: String, timestamp: String) {
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            Color.Red, // Start color
+                            gradient_alert, // Start color
                             bluetooth_connected_card_bg // End color
                         ),
                         startY = 0.0f,
