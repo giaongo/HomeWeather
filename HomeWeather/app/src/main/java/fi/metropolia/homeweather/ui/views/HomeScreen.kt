@@ -9,8 +9,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -35,27 +36,25 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fi.metropolia.homeweather.R
-import fi.metropolia.homeweather.util.service.SensorMeasurement
+import fi.metropolia.homeweather.dataclass.Humidity
+import fi.metropolia.homeweather.dataclass.Temperature
 import fi.metropolia.homeweather.viewmodels.WeatherAPIViewModel
 import getUserLocation
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.Timer
 import kotlin.concurrent.timerTask
 
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier,
-               temperature: SensorMeasurement?,
-               humidity: SensorMeasurement?, ) {
+               temperature: Temperature?,
+               humidity: Humidity?, ) {
     var tabIndex by remember {
         mutableIntStateOf(0)
     }
     val context = LocalContext.current
-    val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
-    val temperatureData = String.format("%.2f", temperature?.value ?: 0.0f)
-    val humidityData = String.format("%.2f", humidity?.value ?: 0.0f)
-    val temperatureTimeStamp = temperature?.timeStamp?.format(formatter) ?: "No Time"
-    val humidityTimeStamp = humidity?.timeStamp?.format(formatter) ?: "No Time"
+    val temperatureData = String.format("%.2f", temperature?.tempData ?: 0.0f)
+    val humidityData = String.format("%.2f", humidity?.humidityData ?: 0.0f)
+
 
     // This is being used to upload temperature data to the firebase atm.
     /*val db = FirebaseFirestore.getInstance()
@@ -260,7 +259,7 @@ fun defineHumidityDescription(humidity: SensorMeasurement?) : String {
 @Composable
 fun HomeScreenPreview() {
     HomeScreen(
-        temperature = SensorMeasurement(50.0f, LocalDateTime.now()),
-        humidity = SensorMeasurement(100.0f, LocalDateTime.now())
+        temperature = Temperature(50.0f, LocalDateTime.now().toString()),
+        humidity = Humidity(100.0f, LocalDateTime.now().toString())
     )
 }

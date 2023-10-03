@@ -7,8 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import fi.metropolia.homeweather.dataclass.Humidity
 import fi.metropolia.homeweather.dataclass.Temperature
-import fi.metropolia.homeweather.firebaseObjects.FireBaseHumidityService
-import fi.metropolia.homeweather.firebaseObjects.FireBaseTemperatureService
+import fi.metropolia.homeweather.repository.AppRepository
 import kotlinx.coroutines.launch
 
 class StaticScreenViewModel: ViewModel() {
@@ -19,23 +18,23 @@ class StaticScreenViewModel: ViewModel() {
 
     init {
         viewModelScope.launch {
-            _temperatureData.value = FireBaseTemperatureService.getTemperatureData()
+            _temperatureData.value = AppRepository.getTemperatureData()
             Log.d("staticScreen", _temperatureData.value.toString())
-            _humidityData.value = FireBaseHumidityService.getHumidityData()
+            _humidityData.value = AppRepository.getHumidityData()
             Log.d("staticScreen", _humidityData.value.toString())
         }
     }
 
     fun getTemperatureData() {
         viewModelScope.launch {
-            _temperatureData.value = FireBaseTemperatureService.getTemperatureData()
+            _temperatureData.value = AppRepository.getTemperatureData()
         }
 
     }
 
     fun getHumidityData() {
         viewModelScope.launch {
-            _humidityData.value = FireBaseHumidityService.getHumidityData()
+            _humidityData.value = AppRepository.getHumidityData()
         }
 
     }

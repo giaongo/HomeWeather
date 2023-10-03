@@ -22,6 +22,8 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import fi.metropolia.homeweather.R
+import fi.metropolia.homeweather.dataclass.Humidity
+import fi.metropolia.homeweather.dataclass.Temperature
 import fi.metropolia.homeweather.ui.views.MainActivity
 import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.BLUETOOTH_SERVICE_ID
 import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.BLUETOOTH_TAG
@@ -44,12 +46,13 @@ class BluetoothLEService: Service() {
     private var _connectedDevice = MutableLiveData<BluetoothDevice?>()
     val connectedDevice: LiveData<BluetoothDevice?> = _connectedDevice
 
-    private var _temperature = MutableLiveData<SensorMeasurement?>()
-    val temperature: LiveData<SensorMeasurement?> = _temperature
+    private var _temperature = MutableLiveData<Temperature?>()
+    val temperature: LiveData<Temperature?> = _temperature
 
-    private var _humidity = MutableLiveData<SensorMeasurement?>()
-    val humidity: LiveData<SensorMeasurement?> = _humidity
+    private var _humidity = MutableLiveData<Humidity?>()
+    val humidity: LiveData<Humidity?> = _humidity
 
+    private lateinit var voiceAlertService:VoiceAlertService
 
     private val gattClientCallback = object : BluetoothGattCallback() {
 
@@ -99,6 +102,7 @@ class BluetoothLEService: Service() {
         }
 
         // update characteristic
+        @Deprecated("Deprecated in Java")
         override fun onCharacteristicChanged(
             gatt: BluetoothGatt?,
             characteristic: BluetoothGattCharacteristic?
@@ -124,12 +128,22 @@ class BluetoothLEService: Service() {
                 when(characteristic?.uuid) {
                     TEMPERATURE_MEASUREMENT_UUID -> {
                         Log.d(BLUETOOTH_TAG,"temperature value is $decodedValue")
-                        _temperature.postValue(SensorMeasurement(decodedValue ?: 0.0f, LocalDateTime.now()))
+                        voiceAlertService.raiseAlertForIndoor(temperature = decodedValue)
+                        _temperature.postValue(
+                            Temperature(
+                                decodedValue ?: 0.0f,
+                                LocalDateTime.now().toString()
+                            )
+                        )
                     }
 
                     HUMIDITY_MEASUREMENT_UUID -> {
                         Log.d(BLUETOOTH_TAG,"humidity value is $decodedValue")
-                        _humidity.postValue(SensorMeasurement(decodedValue ?: 0.0f, LocalDateTime.now()))
+                        voiceAlertService.raiseAlertForIndoor(humidity = decodedValue)
+                        _humidity.postValue(Humidity(
+                            decodedValue ?: 0.0f,
+                            LocalDateTime.now().toString()
+                        ))
                         gatt?.readCharacteristic(gatt.getService(SENSOR_SERVICE_UUID).getCharacteristic(TEMPERATURE_MEASUREMENT_UUID))
                     }
                 }
@@ -164,11 +178,12 @@ class BluetoothLEService: Service() {
     }
 
     /**
-     * Initialize bluetoothAdapter
+     * Initialize bluetoothAdapter and voiceAlertService
      */
     private fun initialize() {
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothAdapter = bluetoothManager.adapter
+        VoiceAlertService(this).also { voiceAlertService = it }
     }
 
     /**
@@ -198,11 +213,12 @@ class BluetoothLEService: Service() {
      */
     private fun mockSensorData() {
         Log.d(BLUETOOTH_TAG, "mock sensor data is called")
-        val temperatureRandom = Random.nextDouble(-20.0, 40.0).toFloat()
-        val humidityRandom = Random.nextDouble(0.0,100.0).toFloat()
-        val currentTime = LocalDateTime.now()
-        _temperature.postValue(SensorMeasurement(temperatureRandom,currentTime))
-        _humidity.postValue(SensorMeasurement(humidityRandom, currentTime))
+        val temperatureRandom = Random.nextDouble(18.0, 28.0).toFloat()
+        val humidityRandom = Random.nextDouble(30.0,60.0).toFloat()
+        val currentTime = LocalDateTime.now().toString()
+        voiceAlertService.raiseAlertForIndoor(temperature = temperatureRandom, humidity = humidityRandom)
+        _temperature.postValue(Temperature(temperatureRandom,currentTime))
+        _humidity.postValue(Humidity(humidityRandom, currentTime))
     }
 
     /**
@@ -260,6 +276,7 @@ class BluetoothLEService: Service() {
     override fun onDestroy() {
         super.onDestroy()
         disconnectBLE()
+        voiceAlertService.shutdown()
     }
 
     inner class LocalBinder: Binder() {
@@ -296,5 +313,3 @@ class BluetoothLEService: Service() {
     }
 
 }
-
-data class SensorMeasurement(val value: Float, val timeStamp: LocalDateTime)
