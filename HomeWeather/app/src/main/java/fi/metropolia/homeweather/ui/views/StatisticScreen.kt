@@ -53,17 +53,25 @@ fun StatisticScreen() {
     }
 
     val tempEntries = ArrayList<Entry>()
+    val currentTime = LocalDateTime.now()
     tempList?.forEach { i ->
-        val time = LocalDateTime.parse(i.date).dayOfWeek.value.toFloat()
-        val entry2 = Entry(time, i.tempData)
-        tempEntries.add(entry2)
+        val tempTimeStamp = LocalDateTime.parse(i.date)
+        if(currentTime.dayOfYear == tempTimeStamp.dayOfYear && currentTime.dayOfMonth == tempTimeStamp.dayOfMonth) {
+            val hourValue = LocalDateTime.parse(i.date).hour.toFloat()
+            val entry2 = Entry(hourValue, i.tempData)
+            tempEntries.add(entry2)
+        }
+
     }
 
     val humidityEntries = ArrayList<Entry>()
     humidityList?.forEach { i ->
-        val time = LocalDateTime.parse(i.date).dayOfWeek.value.toFloat()
-        val entry2 = Entry(time, i.humidityData)
-        humidityEntries.add(entry2)
+        val humidityTimeStamp = LocalDateTime.parse(i.date)
+        if(currentTime.dayOfYear == humidityTimeStamp.dayOfYear && currentTime.dayOfMonth == humidityTimeStamp.dayOfMonth) {
+            val hourValue = LocalDateTime.parse(i.date).hour.toFloat()
+            val entry2 = Entry(hourValue, i.humidityData)
+            humidityEntries.add(entry2)
+        }
     }
 
     val titles = listOf("Temperature", "Humidity")
@@ -98,7 +106,7 @@ fun StatisticScreen() {
                     view.legend.isEnabled = false
                     val dataSet = LineDataSet(tempEntries, "temp")
                     val data = LineData(dataSet)
-                    view.xAxis.labelCount = 7
+                    view.xAxis.labelCount = 12
                     val desc = Description()
                     desc.text = "Temperature"
                     view.description = desc
