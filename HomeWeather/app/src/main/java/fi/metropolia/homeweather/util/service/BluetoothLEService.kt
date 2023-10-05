@@ -21,6 +21,12 @@ import android.os.IBinder
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.work.Constraints
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequest
+import androidx.work.WorkManager
+import androidx.work.workDataOf
+import com.google.gson.Gson
 import fi.metropolia.homeweather.R
 import fi.metropolia.homeweather.dataclass.Humidity
 import fi.metropolia.homeweather.dataclass.Temperature
@@ -31,8 +37,10 @@ import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.CLIENT_
 import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.HUMIDITY_MEASUREMENT_UUID
 import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.SENSOR_SERVICE_UUID
 import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.TEMPERATURE_MEASUREMENT_UUID
+import fi.metropolia.homeweather.workmanager.DataUploadWorker
 import java.time.LocalDateTime
 import java.util.Timer
+import java.util.concurrent.TimeUnit
 import kotlin.concurrent.timerTask
 import kotlin.random.Random
 
@@ -269,6 +277,26 @@ class BluetoothLEService: Service() {
         Log.d(BLUETOOTH_TAG, "Bluetooth service is started")
         serviceNotification = addNotification(this)
         startForeground(BLUETOOTH_SERVICE_ID, serviceNotification)
+
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+        temperature.observeForever{
+            temp ->
+            if(temp != null) {
+                var gson = Gson()
+                val serializedTempData = gson.toJson(temp)
+                val data2 = workDataOf(Pair("temp_data", serializedTempData))
+                val periodicWorkRequest2 =  PeriodicWorkRequest.Builder(
+                    DataUploadWorker::class.java,
+                    1,
+                    TimeUnit.HOURS
+                ).setInputData(data2).setConstraints(constraints).build()
+
+                WorkManager.getInstance(this).enqueue(periodicWorkRequest2)
+            }
+        }
+
         return START_STICKY
     }
 
