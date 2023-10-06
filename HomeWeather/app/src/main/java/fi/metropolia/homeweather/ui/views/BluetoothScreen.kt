@@ -98,7 +98,9 @@ import fi.metropolia.homeweather.viewmodels.BluetoothViewModel
                     ),
             ) {
                 Text(text = if (!bluetoothViewModel.fScanning) "START SCANNING" else "STOP SCANNING",
-                    color = Color.Black )
+                    color = Color.Black,
+                    style = MaterialTheme.typography.titleMedium
+                )
             }
             if (bluetoothViewModel.fScanning) {
                 CircularProgressIndicator(
