@@ -2,5 +2,9 @@
     <string name="app_name">HomeWeather</string>
     <string name="home_label">Home</string>
     <string name="bluetooth_label">Bluetooth</string>
-    <string name="nfc_label">NFC</string>
+    <string name="qr_label">QR</string>
+    <string name="generate_qr_button">Generate QR</string>
+    <string name="qr_code_content_description">QR code</string>
+    <string name="scan_for_more_info">SCAN FOR MORE INFO!</string>
+    <string name="make_our_day_by_leaving_us_stars">Make our day by leaving us stars</string>
 </resources>

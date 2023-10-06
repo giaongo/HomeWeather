@@ -47,7 +47,7 @@ import kotlin.concurrent.timerTask
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier,
                temperature: Temperature?,
-               humidity: Humidity?, ) {
+               humidity: Humidity?) {
     var tabIndex by remember {
         mutableIntStateOf(0)
     }
