@@ -128,12 +128,6 @@ fun MainApp(appViewModel: AppViewModel) {
             navigationDestination = "bluetooth"
         ),
         DrawerItem(
-            title = stringResource(id = R.string.nfc_label),
-            selectedIcon = ImageVector.vectorResource(id = R.drawable.nfc),
-            unselectedIcon = ImageVector.vectorResource(id = R.drawable.nfc),
-            navigationDestination = "nfc"
-        ),
-        DrawerItem(
             title = "Statistic",
             selectedIcon = ImageVector.vectorResource(id = R.drawable.thermostat),
             unselectedIcon = ImageVector.vectorResource(id = R.drawable.thermostat),
@@ -143,6 +137,12 @@ fun MainApp(appViewModel: AppViewModel) {
             selectedIcon = ImageVector.vectorResource(id = R.drawable.notification_filled),
             unselectedIcon = ImageVector.vectorResource(id = R.drawable.notification_outline),
             navigationDestination = "alert"
+        ),
+        DrawerItem(
+            title = stringResource(id = R.string.qr_label),
+            selectedIcon = ImageVector.vectorResource(id = R.drawable.qr),
+            unselectedIcon = ImageVector.vectorResource(id = R.drawable.qr),
+            navigationDestination = "qr"
         ),
 
     )
@@ -206,7 +206,7 @@ fun MainApp(appViewModel: AppViewModel) {
                     composable("bluetooth") { bluetoothLEService.value?.let { service ->
                         BluetoothScreen(service)
                     }}
-                    composable("nfc") { NFCScreen()}
+                    composable("qr") { QRScreen()}
                     composable("statistic") { StatisticScreen()}
                     composable("alert") { AlertScreen()}
                 }
