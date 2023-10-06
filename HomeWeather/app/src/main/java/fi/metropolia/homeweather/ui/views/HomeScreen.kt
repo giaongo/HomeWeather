@@ -9,9 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -47,7 +46,7 @@ import kotlin.concurrent.timerTask
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier,
                temperature: Temperature?,
-               humidity: Humidity?, ) {
+               humidity: Humidity?) {
     var tabIndex by remember {
         mutableIntStateOf(0)
     }
@@ -231,8 +230,8 @@ fun CircleInfo(currentlyInsideWeatherInfo: String, description: String) {
     }
 }
 
-fun defineTempDescription(temperature: SensorMeasurement?): String {
-    val temp = temperature?.value ?: 0.0f
+fun defineTempDescription(temperature: Temperature?): String {
+    val temp = temperature?.tempData ?: 0.0f
     return if (temp > 0 && temp <= 15) {
         "Cool"
     } else if (temp > 15 && temp <= 30) {
@@ -244,8 +243,8 @@ fun defineTempDescription(temperature: SensorMeasurement?): String {
     }
 }
 
-fun defineHumidityDescription(humidity: SensorMeasurement?) : String {
-    val humid = humidity?.value ?: 0.0f
+fun defineHumidityDescription(humidity: Humidity?) : String {
+    val humid = humidity?.humidityData ?: 0.0f
     return if (humid <= 30) {
         "Dry"
     } else if (humid > 30 && humid <= 60) {
