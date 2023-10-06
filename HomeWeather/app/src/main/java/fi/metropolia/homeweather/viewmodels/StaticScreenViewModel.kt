@@ -18,23 +18,23 @@ class StaticScreenViewModel: ViewModel() {
 
     init {
         viewModelScope.launch {
-            _temperatureData.value = AppRepository.getTemperatureData()
+            _temperatureData.value = AppRepository.getFirebaseData("temperature", Temperature::class.java)
             Log.d("staticScreen", _temperatureData.value.toString())
-            _humidityData.value = AppRepository.getHumidityData()
+            _humidityData.value = AppRepository.getFirebaseData("humidity", Humidity::class.java)
             Log.d("staticScreen", _humidityData.value.toString())
         }
     }
 
     fun getTemperatureData() {
         viewModelScope.launch {
-            _temperatureData.value = AppRepository.getTemperatureData()
+            _temperatureData.value = AppRepository.getFirebaseData("temperature", Temperature::class.java)
         }
 
     }
 
     fun getHumidityData() {
         viewModelScope.launch {
-            _humidityData.value = AppRepository.getHumidityData()
+            _humidityData.value = AppRepository.getFirebaseData("humidity", Humidity::class.java)
         }
 
     }
