@@ -37,7 +37,8 @@ import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.CLIENT_
 import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.HUMIDITY_MEASUREMENT_UUID
 import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.SENSOR_SERVICE_UUID
 import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.TEMPERATURE_MEASUREMENT_UUID
-import fi.metropolia.homeweather.workmanager.DataUploadWorker
+import fi.metropolia.homeweather.workmanager.HumidityUploadWorker
+import fi.metropolia.homeweather.workmanager.TemperatureUploadWorker
 import java.time.LocalDateTime
 import java.util.Timer
 import java.util.concurrent.TimeUnit
@@ -287,16 +288,31 @@ class BluetoothLEService: Service() {
                 var gson = Gson()
                 val serializedTempData = gson.toJson(temp)
                 val data2 = workDataOf(Pair("temp_data", serializedTempData))
-                val periodicWorkRequest2 =  PeriodicWorkRequest.Builder(
-                    DataUploadWorker::class.java,
+                val periodicWorkRequest =  PeriodicWorkRequest.Builder(
+                    TemperatureUploadWorker::class.java,
                     1,
                     TimeUnit.HOURS
                 ).setInputData(data2).setConstraints(constraints).build()
 
-                WorkManager.getInstance(this).enqueue(periodicWorkRequest2)
+                WorkManager.getInstance(this).enqueue(periodicWorkRequest)
             }
         }
 
+        humidity.observeForever{
+            humidity ->
+            if(humidity != null) {
+                var gson = Gson()
+                val serializedTempData = gson.toJson(humidity)
+                val data2 = workDataOf(Pair("humidity_data", serializedTempData))
+                val periodicWorkRequest =  PeriodicWorkRequest.Builder(
+                    HumidityUploadWorker::class.java,
+                    1,
+                    TimeUnit.HOURS
+                ).setInputData(data2).setConstraints(constraints).build()
+
+                WorkManager.getInstance(this).enqueue(periodicWorkRequest)
+            }
+        }
         return START_STICKY
     }
 
