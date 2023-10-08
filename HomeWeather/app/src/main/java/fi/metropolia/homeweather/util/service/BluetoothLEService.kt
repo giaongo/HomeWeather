@@ -36,6 +36,7 @@ import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.TEMPERA
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -63,6 +64,8 @@ class BluetoothLEService: Service() {
     val humidity: LiveData<Humidity?> = _humidity
 
     private lateinit var voiceAlertService:VoiceAlertService
+    private val serviceScope = CoroutineScope(Dispatchers.Main)
+    private val firebaseUploadScope = CoroutineScope(Dispatchers.IO)
 
     private val gattClientCallback = object : BluetoothGattCallback() {
 
@@ -304,7 +307,7 @@ class BluetoothLEService: Service() {
      */
     private fun <T> uploadData(collection:String, data: LiveData<T>) {
         try {
-            CoroutineScope(Dispatchers.IO).launch {
+            firebaseUploadScope.launch {
                 async {
                     Log.d("timerTask", "Upload $collection data")
                     data.value?.let {
@@ -339,7 +342,7 @@ class BluetoothLEService: Service() {
         startForeground(BLUETOOTH_SERVICE_ID, serviceNotification)
 
         // await for first livedata value appears and upload sensor data to firebase every hour
-        CoroutineScope(Dispatchers.Main).launch {
+        serviceScope.launch {
             val firstTemperatureValue = _temperature.awaitFirstValue()
             val firstHumidityValue = _humidity.awaitFirstValue()
             Log.d("timerTask", "firstTemp $firstTemperatureValue firstHumidity $firstHumidityValue")
@@ -357,6 +360,8 @@ class BluetoothLEService: Service() {
         super.onDestroy()
         disconnectBLE()
         voiceAlertService.shutdown()
+        serviceScope.cancel()
+        firebaseUploadScope.cancel()
     }
 
     inner class LocalBinder: Binder() {
@@ -366,7 +371,7 @@ class BluetoothLEService: Service() {
 
 
     companion object {
-        const val ENABLE_MOCK: Boolean = true
+        const val ENABLE_MOCK: Boolean = false
         const val HOUR_INTERVAL:Long = 3600000L
         const val MINUTE_INTERVAL:Long = 60000L
     }
