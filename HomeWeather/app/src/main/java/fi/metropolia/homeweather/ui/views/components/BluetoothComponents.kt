@@ -27,6 +27,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
@@ -40,7 +41,6 @@ import fi.metropolia.homeweather.ui.theme.HomeWeatherTheme
 import fi.metropolia.homeweather.ui.theme.Typography
 import fi.metropolia.homeweather.ui.theme.bluetooth_connected_card_bg
 import fi.metropolia.homeweather.util.service.BluetoothLEService
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -80,6 +80,7 @@ fun BluetoothScannedDeviceCard(
     result: ScanResult,
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope { Dispatchers.IO }
     Card(modifier = Modifier
         .fillMaxWidth()
         .height(height = 200.dp)
@@ -117,7 +118,7 @@ fun BluetoothScannedDeviceCard(
                     maxLines = 2)
                 Text(text = result.device.address, modifier = Modifier.padding(vertical = 5.dp))
                 Button(onClick = {
-                    CoroutineScope(Dispatchers.IO).launch {
+                    coroutineScope.launch {
                         bluetoothLEService.connectBLE(result.device,context)
                     }
                 },

@@ -7,6 +7,7 @@ import fi.metropolia.homeweather.dataclass.VoiceAlert
 import fi.metropolia.homeweather.repository.AppRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.util.Locale
@@ -14,6 +15,7 @@ import java.util.Locale
 class VoiceAlertService(context: Context) {
     private var textToSpeech: TextToSpeech? = null
     private var enableAlert:Boolean = true
+    private val alertServiceScope = CoroutineScope(Dispatchers.IO)
 
     init {
        textToSpeech = TextToSpeech(context) { status ->
@@ -27,7 +29,7 @@ class VoiceAlertService(context: Context) {
 
     private fun speak(text: String) {
         textToSpeech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
-        CoroutineScope(Dispatchers.IO).launch {
+        alertServiceScope.launch {
             AppRepository.postFirebaseData("alert", VoiceAlert(text, LocalDateTime.now().toString()))
         }
     }
@@ -37,6 +39,7 @@ class VoiceAlertService(context: Context) {
             textToSpeech?.stop()
         }
         textToSpeech?.shutdown()
+        alertServiceScope.cancel()
     }
 
     private fun isSpeaking(): Boolean {

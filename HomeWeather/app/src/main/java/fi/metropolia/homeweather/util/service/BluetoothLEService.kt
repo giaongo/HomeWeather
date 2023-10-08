@@ -21,15 +21,11 @@ import android.os.IBinder
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.work.Constraints
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequest
-import androidx.work.WorkManager
-import androidx.work.workDataOf
-import com.google.gson.Gson
+import androidx.lifecycle.Observer
 import fi.metropolia.homeweather.R
 import fi.metropolia.homeweather.dataclass.Humidity
 import fi.metropolia.homeweather.dataclass.Temperature
+import fi.metropolia.homeweather.repository.AppRepository
 import fi.metropolia.homeweather.ui.views.MainActivity
 import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.BLUETOOTH_SERVICE_ID
 import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.BLUETOOTH_TAG
@@ -37,12 +33,18 @@ import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.CLIENT_
 import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.HUMIDITY_MEASUREMENT_UUID
 import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.SENSOR_SERVICE_UUID
 import fi.metropolia.homeweather.viewmodels.BluetoothViewModel.Companion.TEMPERATURE_MEASUREMENT_UUID
-import fi.metropolia.homeweather.workmanager.HumidityUploadWorker
-import fi.metropolia.homeweather.workmanager.TemperatureUploadWorker
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 import java.util.Timer
-import java.util.concurrent.TimeUnit
 import kotlin.concurrent.timerTask
+import kotlin.coroutines.resume
 import kotlin.random.Random
 
 @SuppressLint("MissingPermission")
@@ -62,6 +64,8 @@ class BluetoothLEService: Service() {
     val humidity: LiveData<Humidity?> = _humidity
 
     private lateinit var voiceAlertService:VoiceAlertService
+    private val serviceScope = CoroutineScope(Dispatchers.Main)
+    private val firebaseUploadScope = CoroutineScope(Dispatchers.IO)
 
     private val gattClientCallback = object : BluetoothGattCallback() {
 
@@ -259,75 +263,6 @@ class BluetoothLEService: Service() {
         }
     }
 
-    override fun onBind(p0: Intent?): IBinder = binder
-
-    override fun onCreate() {
-        super.onCreate()
-        Log.d(BLUETOOTH_TAG, "Bluetooth service is created")
-        initialize()
-
-        // if mock is enabled, provides mocked sensor value every 10 seconds
-        if(ENABLE_MOCK) {
-            Timer().scheduleAtFixedRate(timerTask {
-                mockSensorData()
-            },0L, 60000L)
-        }
-    }
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(BLUETOOTH_TAG, "Bluetooth service is started")
-        serviceNotification = addNotification(this)
-        startForeground(BLUETOOTH_SERVICE_ID, serviceNotification)
-
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
-        temperature.observeForever{
-            temp ->
-            if(temp != null) {
-                var gson = Gson()
-                val serializedTempData = gson.toJson(temp)
-                val data2 = workDataOf(Pair("temp_data", serializedTempData))
-                val periodicWorkRequest =  PeriodicWorkRequest.Builder(
-                    TemperatureUploadWorker::class.java,
-                    1,
-                    TimeUnit.HOURS
-                ).setInputData(data2).setConstraints(constraints).build()
-
-                WorkManager.getInstance(this).enqueue(periodicWorkRequest)
-            }
-        }
-
-        humidity.observeForever{
-            humidity ->
-            if(humidity != null) {
-                var gson = Gson()
-                val serializedTempData = gson.toJson(humidity)
-                val data2 = workDataOf(Pair("humidity_data", serializedTempData))
-                val periodicWorkRequest =  PeriodicWorkRequest.Builder(
-                    HumidityUploadWorker::class.java,
-                    1,
-                    TimeUnit.HOURS
-                ).setInputData(data2).setConstraints(constraints).build()
-
-                WorkManager.getInstance(this).enqueue(periodicWorkRequest)
-            }
-        }
-        return START_STICKY
-    }
-
-
-    override fun onDestroy() {
-        super.onDestroy()
-        disconnectBLE()
-        voiceAlertService.shutdown()
-    }
-
-    inner class LocalBinder: Binder() {
-        // get the current instance of service class
-        fun getService(): BluetoothLEService = this@BluetoothLEService
-    }
-
     /**
      * create a foreground notification to inform the user about the running state of service
      */
@@ -352,8 +287,93 @@ class BluetoothLEService: Service() {
         return notification
     }
 
+    /**
+     * suspend function to get the first value of LiveData
+     */
+    private suspend fun <T>LiveData<T>.awaitFirstValue(): T = withContext(Dispatchers.Main) {
+        suspendCancellableCoroutine { continuation ->
+            val observer = Observer<T> {
+                    value -> if (isActive) continuation.resume(value)
+            }
+            observeForever(observer)
+            continuation.invokeOnCancellation {
+                removeObserver(observer)
+            }
+        }
+    }
+
+    /**
+     * upload sensor data to firebase
+     */
+    private fun <T> uploadData(collection:String, data: LiveData<T>) {
+        try {
+            firebaseUploadScope.launch {
+                async {
+                    Log.d("timerTask", "Upload $collection data")
+                    data.value?.let {
+                        AppRepository.postFirebaseData(collection, it)
+                    }
+                }.await()
+            }
+        } catch (error: Exception) {
+            Log.e("timerTask", "Error in uploading $collection data ${error.localizedMessage}")
+        }
+    }
+
+    //-----------------------------Service Overridden Functions----------------------------------//
+    override fun onBind(p0: Intent?): IBinder = binder
+
+    override fun onCreate() {
+        super.onCreate()
+        Log.d(BLUETOOTH_TAG, "Bluetooth service is created")
+        initialize()
+
+        // if mock is enabled, provides mocked sensor value every 10 seconds
+        if(ENABLE_MOCK) {
+            Timer().scheduleAtFixedRate(timerTask {
+                mockSensorData()
+            },0L, MINUTE_INTERVAL)
+        }
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(BLUETOOTH_TAG, "Bluetooth service is started")
+        serviceNotification = addNotification(this)
+        startForeground(BLUETOOTH_SERVICE_ID, serviceNotification)
+
+        // await for first livedata value appears and upload sensor data to firebase every hour
+        serviceScope.launch {
+            val firstTemperatureValue = _temperature.awaitFirstValue()
+            val firstHumidityValue = _humidity.awaitFirstValue()
+            Log.d("timerTask", "firstTemp $firstTemperatureValue firstHumidity $firstHumidityValue")
+            Timer().scheduleAtFixedRate(timerTask {
+                uploadData("temperature", temperature)
+                uploadData("humidity", humidity)
+            },0L, HOUR_INTERVAL)
+        }
+
+        return START_STICKY
+    }
+
+
+    override fun onDestroy() {
+        super.onDestroy()
+        disconnectBLE()
+        voiceAlertService.shutdown()
+        serviceScope.cancel()
+        firebaseUploadScope.cancel()
+    }
+
+    inner class LocalBinder: Binder() {
+        // get the current instance of service class
+        fun getService(): BluetoothLEService = this@BluetoothLEService
+    }
+
+
     companion object {
-        const val ENABLE_MOCK: Boolean = true
+        const val ENABLE_MOCK: Boolean = false
+        const val HOUR_INTERVAL:Long = 3600000L
+        const val MINUTE_INTERVAL:Long = 60000L
     }
 
 }
