@@ -150,7 +150,8 @@ fun DisplayWeatherInfo(fraction: Float = 1F, measureLocation: String, measureTem
     ) {
         Text(
             text = measureLocation,
-            color = Color.Gray
+            color = Color.Gray,
+            modifier = Modifier.padding(vertical = 8.dp),
         )
         Text(
             text = measureTemp,

@@ -7,4 +7,5 @@
     <string name="qr_code_content_description">QR code</string>
     <string name="scan_for_more_info">SCAN FOR MORE INFO!</string>
     <string name="make_our_day_by_leaving_us_stars">Make our day by leaving us stars</string>
+    <string name="splash_screen_logo">splash screen logo</string>
 </resources>
