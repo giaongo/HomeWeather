@@ -6,8 +6,13 @@ HomeWeather is an android mobile sensor-based application utilizing DHT22 temper
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
-- [Usage](#Usage)
+- [Usage](#usage)
 - [Features](#features)
+- [Components](#components)
+- [Application Flow](#application-flow)
+- [Technology](#technology)
+- [Contributing](#contributing)
+- [Video Demo](#video-demo)
 
 ## Getting Started
 
@@ -37,11 +42,35 @@ HomeWeather is recommended to be used as a stationary device at your home, offic
 
 HomeWeather allows users to:
 
-- Measure humidity level and temperature inside a room with an external sensor
-- Compare the humidity levels and temperatures inside your room with your living area with the data fetched from the API.
+- Measure humidity level and temperature inside a room with an external bluetooth sensor
+- Compare the humidity levels and temperatures inside your room with your living area with the data fetched from the OpenWeather API.
 - Allow users to see humidity level and temperature statistic over a certain period.
-- Alert users when inside humidity level or temperature drops too low or rises too high.
-- Allow users to scan QR code to share their humidity level and temperature
+- Voice alert users when inside humidity level or temperature drops too low or rises too high and allow user to add additional info on every alert log.
+- Allow users to scan QR code to view our github page and download the app apk
+
+## Components
+
+- Jetpack Compose
+- Firebase Firestone
+- Material Design 3
+- Bluetooth Connection
+- Foreground Service
+- Work Manager
+- Animation
+- QR generator
+- External Arduino board with DHT22 sensor
+- Open Weather API
+
+## Application flow
+
+- Bluetooth Service is running persistently on background even when application is closed
+- Indoor temperature and humidity level are uploaded to Firebase cloud in background every hour
+- Outdoor temperature and humidity level are fetched and updated hourly
+
+## Technology
+
+- Android Kotlin
+- C/C++
 
 ## Contributing
 
@@ -52,5 +81,8 @@ Contributions are welcome! Here's how you can contribute to the project:
 3. Make changes and commit them with descriptive commit messages.
 4. Push your changes to your fork on GitHub.
 5. Submit a pull request to the original repository explaining your changes.
+
+## Video Demo
+Link to video here
 
 
