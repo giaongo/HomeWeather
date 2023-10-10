@@ -8,4 +8,17 @@
     <string name="scan_for_more_info">SCAN FOR MORE INFO!</string>
     <string name="make_our_day_by_leaving_us_stars">Make our day by leaving us stars</string>
     <string name="splash_screen_logo">splash screen logo</string>
+    <string name="temperature">Temperature</string>
+    <string name="humidity">Humidity</string>
+    <string name="temperature_tab">Temperature Tab</string>
+    <string name="humidity_tab">Humidity Tab</string>
+    <string name="currently_inside">Currently Inside</string>
+    <string name="currently_outside">Currently Outside</string>
+    <string name="cool">Cool</string>
+    <string name="warm">Warm</string>
+    <string name="hot">Hot</string>
+    <string name="freezing">Freezing</string>
+    <string name="dry">Dry</string>
+    <string name="standard">Standard</string>
+    <string name="moist">Moist</string>
 </resources>
