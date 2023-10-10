@@ -1,4 +1,4 @@
-# Project Name
+# HomeWeather
 
 HomeWeather is an android mobile sensor-based application utilizing DHT22 temperature-humidity sensor. This is a project developed under Metropolia University of Applied Sciences. For further information, please see below or contact one of the developers.
 
