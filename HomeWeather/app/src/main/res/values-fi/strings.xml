@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kotisää</string>
+    <string name="home_label">Koti</string>
+    <string name="bluetooth_label">Bluetooth</string>
+    <string name="qr_label">QR</string>
+    <string name="generate_qr_button">luo QR-koodi</string>
+    <string name="qr_code_content_description">QR-koodi</string>
+    <string name="scan_for_more_info">SKANNAA LISÄÄ TIETOA!</string>
+    <string name="make_our_day_by_leaving_us_stars">Anna tähti auttaaksesi kehittäjiä</string>
+    <string name="splash_screen_logo">aloitusruutu logo</string>
+    <string name="temperature">Lämpötila</string>
+    <string name="humidity">Ilmankosteus</string>
+    <string name="temperature_tab">Lämpötila Välilehti</string>
+    <string name="humidity_tab">Ilmankosteus Välilehti</string>
+    <string name="currently_inside">Nykyinen sisälämpötila</string>
+    <string name="currently_outside">Nykyinen ulkolämpötila</string>
+    <string name="cool">Viileä</string>
+    <string name="warm">Lämmin</string>
+    <string name="hot">Kuuma</string>
+    <string name="freezing">Kylmä</string>
+    <string name="dry">Kuiva</string>
+    <string name="standard">Normaali ilmankosteus</string>
+    <string name="moist">Kostea</string>
+</resources>

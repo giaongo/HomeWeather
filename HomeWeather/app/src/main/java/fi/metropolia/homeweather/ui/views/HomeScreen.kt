@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -68,7 +69,7 @@ fun HomeScreen(modifier: Modifier = Modifier,
     }, 0, 3600000L) //3600 seconds in milliseconds
 
 
-    val titles = listOf("Temperature", "Humidity")
+    val titles = listOf(stringResource(id = R.string.temperature), stringResource(id = R.string.humidity))
     Column(modifier = modifier) {
         TabRow(selectedTabIndex = tabIndex) {
             titles.forEachIndexed { index, title ->
@@ -79,12 +80,12 @@ fun HomeScreen(modifier: Modifier = Modifier,
                         when (index) {
                             0 -> Icon(
                                 painter = painterResource(id = R.drawable.thermostat),
-                                contentDescription = "temperature tab"
+                                contentDescription = stringResource(id = R.string.temperature_tab)
                             )
 
                             1 -> Icon(
                                 painter = painterResource(id = R.drawable.humidity),
-                                contentDescription = "Humidity tab"
+                                contentDescription = stringResource(id = R.string.humidity_tab)
                             )
                         }
                     }
@@ -121,11 +122,11 @@ fun DisplayTabContent(
     ) {
         DisplayWeatherInfo(
             fraction = 0.5F,
-            measureLocation = "Currently Inside",
+            measureLocation = stringResource(id = R.string.currently_inside),
             measureTemp = sensorData
         )
         DisplayWeatherInfo(
-            measureLocation = "Currently Outside",
+            measureLocation = stringResource(id = R.string.currently_outside),
             measureTemp = weatherData
         )
     }
@@ -211,27 +212,28 @@ fun CircleInfo(currentlyInsideWeatherInfo: String, description: String) {
     }
 }
 
+@Composable
 fun defineTempDescription(temperature: Temperature?): String {
     val temp = temperature?.tempData ?: 0.0f
     return if (temp > 0 && temp <= 15) {
-        "Cool"
+        stringResource(id = R.string.cool)
     } else if (temp > 15 && temp <= 30) {
-        "Warm"
+        stringResource(id = R.string.warm)
     } else if (temp > 30) {
-        "Hot"
+        stringResource(id = R.string.hot)
     } else {
-        "Freezing"
+        stringResource(id = R.string.freezing)
     }
 }
-
+@Composable
 fun defineHumidityDescription(humidity: Humidity?) : String {
     val humid = humidity?.humidityData ?: 0.0f
     return if (humid <= 30) {
-        "Dry"
+        stringResource(id = R.string.dry)
     } else if (humid > 30 && humid <= 60) {
-        "Standard"
+        stringResource(id = R.string.standard)
     } else {
-        "Moist"
+        stringResource(id = R.string.moist)
     }
 }
 
