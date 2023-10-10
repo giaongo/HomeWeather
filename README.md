@@ -55,7 +55,6 @@ HomeWeather allows users to:
 - Material Design 3
 - Bluetooth Connection
 - Foreground Service
-- Work Manager
 - Animation
 - QR generator
 - External Arduino board with DHT22 sensor
