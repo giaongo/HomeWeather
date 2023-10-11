@@ -29,6 +29,7 @@ OR
 1. Clone the repository to your local machine using `git clone`.
 2. Open the project in Android Studio.
 3. Build and run the project on your Android device or emulator.
+4. Contact a developers for env file
 
 OR
 
@@ -43,7 +44,7 @@ HomeWeather is recommended to be used as a stationary device at your home, offic
 HomeWeather allows users to:
 
 - Measure humidity level and temperature inside a room with an external bluetooth sensor
-- Compare the humidity levels and temperatures inside your room with your living area with the data fetched from the OpenWeather API.
+- Compare the humidity levels and temperatures inside your room with your living area with GPS internal sensor and data fetched from the OpenWeather API.
 - Allow users to see humidity level and temperature statistic over a certain period.
 - Voice alert users when inside humidity level or temperature drops too low or rises too high and allow user to add additional info on every alert log.
 - Allow users to scan QR code to view our github page and download the app apk
@@ -59,6 +60,10 @@ HomeWeather allows users to:
 - QR generator
 - External Arduino board with DHT22 sensor
 - Open Weather API
+- Voice Alert
+- TexttoSpeech API
+- GPS lat & long
+- Env file to prevent sensitive data exposure
 
 ## Application flow
 
