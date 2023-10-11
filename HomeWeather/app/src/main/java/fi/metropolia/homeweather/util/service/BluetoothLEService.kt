@@ -428,13 +428,6 @@ class BluetoothLEService : Service() {
                 mockSensorData()
             }, 0L, MINUTE_INTERVAL)
         }
-    }
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d(BLUETOOTH_TAG, "Bluetooth service is started")
-        serviceNotification = addNotification(this)
-        startForeground(BLUETOOTH_SERVICE_ID, serviceNotification)
-
         // await for first livedata value appears and upload sensor data to firebase every hour
         serviceScope.launch {
             val firstTemperatureValue = _temperature.awaitFirstValue()
@@ -445,7 +438,12 @@ class BluetoothLEService : Service() {
                 uploadData("humidity", humidity)
             }, 0L, HOUR_INTERVAL)
         }
+    }
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(BLUETOOTH_TAG, "Bluetooth service is started")
+        serviceNotification = addNotification(this)
+        startForeground(BLUETOOTH_SERVICE_ID, serviceNotification)
         return START_STICKY
     }
 
@@ -467,7 +465,7 @@ class BluetoothLEService : Service() {
     companion object {
         const val ENABLE_MOCK: Boolean = false
         const val HOUR_INTERVAL: Long = 3600000L
-        const val MINUTE_INTERVAL: Long = 60000L
+        const val MINUTE_INTERVAL: Long = 10000L
     }
 
 }
