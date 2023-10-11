@@ -47,7 +47,7 @@ HomeWeather allows users to:
 - Measure humidity level and temperature inside a room with an external bluetooth sensor
 - Compare the humidity levels and temperatures inside your room with your living area with GPS internal sensor and data fetched from the OpenWeather API.
 - Allow users to see humidity level and temperature statistic over a certain period.
-- Voice alert users when inside humidity level or temperature drops too low or rises too high and allow user to add additional info on every alert log.
+- Voice alert + emergency call to users when inside humidity level or temperature drops too low or rises too high and allow user to add additional info on every alert log.
 - Allow users to scan QR code to view our github page and download the app apk
 
 ## Components
@@ -64,6 +64,8 @@ HomeWeather allows users to:
 - Voice Alert
 - TexttoSpeech API
 - GPS lat & long
+- SharedPreference
+- Emergency call
 - Env file to prevent sensitive data exposure
 
 ## Application flow
