@@ -49,6 +49,7 @@ HomeWeather allows users to:
 - Allow users to see humidity level and temperature statistic over a certain period.
 - Voice alert + emergency call to users when inside humidity level or temperature drops too low or rises too high and allow user to add additional info on every alert log.
 - Allow users to scan QR code to view our github page and download the app apk
+- Application is available in English and Finnish
 
 ## Components
 
