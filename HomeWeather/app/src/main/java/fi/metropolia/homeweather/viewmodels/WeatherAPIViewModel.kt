@@ -10,7 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class WeatherAPIViewModel() : ViewModel() {
+class WeatherAPIViewModel : ViewModel() {
     private val weatherAPIRepository = WeatherAPIRepository()
     private val _measureTemp = MutableLiveData<Double>()
     val measureTemp: LiveData<Double> get() = _measureTemp

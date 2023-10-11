@@ -206,8 +206,8 @@ fun Modal(fieldData: String, alertScreenViewModel: AlertScreenViewModel) {
                             )
                         )
                 ) {
-                    Column() {
-                        Box() {
+                    Column {
+                        Box {
                             OutlinedTextField(
                                 value = text,
                                 onValueChange = { text = it },
@@ -250,7 +250,7 @@ fun Modal(fieldData: String, alertScreenViewModel: AlertScreenViewModel) {
 
 }
 
-suspend fun updateData(fieldName: String, documentId: String, collectionName: String, fieldData: Any) {
+fun updateData(fieldName: String, documentId: String, collectionName: String, fieldData: Any) {
     AlertScreenViewModel().updateFireBaseData(fieldName, documentId, collectionName, fieldData)
 }
 
