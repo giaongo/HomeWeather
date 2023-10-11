@@ -13,6 +13,7 @@ HomeWeather is an android mobile sensor-based application utilizing DHT22 temper
 - [Technology](#technology)
 - [Contributing](#contributing)
 - [Video Demo](#video-demo)
+- [Thumbnails](#thumbnails)
 
 ## Getting Started
 
@@ -87,6 +88,18 @@ Contributions are welcome! Here's how you can contribute to the project:
 5. Submit a pull request to the original repository explaining your changes.
 
 ## Video Demo
+
 Link to video here
+
+## Thumbnails
+<img src="https://github.com/giaongo/HomeWeather/assets/91269635/f151933e-81b4-447f-a004-2fddfc37c3db" height="500"/>
+<img src="https://github.com/giaongo/HomeWeather/assets/91269635/5b11f8a8-8d7d-4e6a-87c1-35dbd50b11c6" height="500"/>
+<img src="https://github.com/giaongo/HomeWeather/assets/91269635/1ed14521-c287-4d41-9798-b7f8718aa062" height="500"/>
+<img src="https://github.com/giaongo/HomeWeather/assets/91269635/dd583a9d-f84a-4203-85cc-976677e60040" height="500"/>
+<img src="https://github.com/giaongo/HomeWeather/assets/91269635/bc8b4a84-38e9-40b0-8ef6-e37ed691a5ab" height="500"/>
+<img src="https://github.com/giaongo/HomeWeather/assets/91269635/65a67901-93c9-4d43-9f44-d2d0ff7899a9" height="500"/>
+<img src="https://github.com/giaongo/HomeWeather/assets/91269635/2ab6eb65-4828-4407-b438-e16e3f67a49b" height="500"/>
+
+
 
 
