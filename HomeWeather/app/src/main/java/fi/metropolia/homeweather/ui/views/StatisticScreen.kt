@@ -75,7 +75,7 @@ fun StatisticScreen() {
     }
 
     val titles = listOf("Temperature", "Humidity")
-    Column() {
+    Column {
         TabRow(selectedTabIndex = tabIndex) {
             titles.forEachIndexed { index, title ->
                 Tab(selected = tabIndex == index,

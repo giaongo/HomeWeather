@@ -1,6 +1,6 @@
 package fi.metropolia.homeweather.util.service
 
-import android.annotation.SuppressLint
+import android.Manifest
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -16,9 +16,12 @@ import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Binder
 import android.os.IBinder
 import android.util.Log
+import android.widget.Toast
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
@@ -47,9 +50,8 @@ import kotlin.concurrent.timerTask
 import kotlin.coroutines.resume
 import kotlin.random.Random
 
-@SuppressLint("MissingPermission")
-class BluetoothLEService: Service() {
-    lateinit var bluetoothAdapter:BluetoothAdapter
+class BluetoothLEService : Service() {
+    lateinit var bluetoothAdapter: BluetoothAdapter
     private val binder = LocalBinder()
     private var bluetoothGatt: BluetoothGatt? = null
     private lateinit var serviceNotification: Notification
@@ -63,7 +65,7 @@ class BluetoothLEService: Service() {
     private var _humidity = MutableLiveData<Humidity?>()
     val humidity: LiveData<Humidity?> = _humidity
 
-    private lateinit var voiceAlertService:VoiceAlertService
+    private lateinit var voiceAlertService: VoiceAlertService
     private val serviceScope = CoroutineScope(Dispatchers.Main)
     private val firebaseUploadScope = CoroutineScope(Dispatchers.IO)
 
@@ -80,6 +82,18 @@ class BluetoothLEService: Service() {
                 BluetoothProfile.STATE_CONNECTED -> {
                     Log.d(BLUETOOTH_TAG, "Connected GATT service")
                     _connectedDevice.postValue(gatt?.device)
+                    if (ActivityCompat.checkSelfPermission(
+                            applicationContext,
+                            Manifest.permission.BLUETOOTH_CONNECT
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        Toast.makeText(
+                            applicationContext,
+                            getString(R.string.we_need_bluetooth_permission_to_continue),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return
+                    }
                     gatt?.discoverServices()
                 }
 
@@ -115,12 +129,24 @@ class BluetoothLEService: Service() {
         }
 
         // update characteristic
+        @Suppress("DEPRECATION")
         @Deprecated("Deprecated in Java")
         override fun onCharacteristicChanged(
             gatt: BluetoothGatt?,
             characteristic: BluetoothGattCharacteristic?
         ) {
             super.onCharacteristicChanged(gatt, characteristic)
+            if (ActivityCompat.checkSelfPermission(
+                    applicationContext,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                Toast.makeText(
+                    applicationContext,
+                    getString(R.string.we_need_bluetooth_permission_to_continue), Toast.LENGTH_SHORT
+                ).show()
+                return
+            }
             gatt?.readCharacteristic(characteristic)
         }
 
@@ -136,11 +162,11 @@ class BluetoothLEService: Service() {
             status: Int
         ) {
             super.onCharacteristicRead(gatt, characteristic, status)
-            if(status == BluetoothGatt.GATT_SUCCESS && !ENABLE_MOCK) {
+            if (status == BluetoothGatt.GATT_SUCCESS && !ENABLE_MOCK) {
                 val decodedValue = characteristic?.let { decodeSensorByteArray(it.value) }
-                when(characteristic?.uuid) {
+                when (characteristic?.uuid) {
                     TEMPERATURE_MEASUREMENT_UUID -> {
-                        Log.d(BLUETOOTH_TAG,"temperature value is $decodedValue")
+                        Log.d(BLUETOOTH_TAG, "temperature value is $decodedValue")
                         voiceAlertService.raiseAlertForIndoor(temperature = decodedValue)
                         _temperature.postValue(
                             Temperature(
@@ -151,13 +177,30 @@ class BluetoothLEService: Service() {
                     }
 
                     HUMIDITY_MEASUREMENT_UUID -> {
-                        Log.d(BLUETOOTH_TAG,"humidity value is $decodedValue")
+                        Log.d(BLUETOOTH_TAG, "humidity value is $decodedValue")
                         voiceAlertService.raiseAlertForIndoor(humidity = decodedValue)
-                        _humidity.postValue(Humidity(
-                            decodedValue ?: 0.0f,
-                            LocalDateTime.now().toString()
-                        ))
-                        gatt?.readCharacteristic(gatt.getService(SENSOR_SERVICE_UUID).getCharacteristic(TEMPERATURE_MEASUREMENT_UUID))
+                        _humidity.postValue(
+                            Humidity(
+                                decodedValue ?: 0.0f,
+                                LocalDateTime.now().toString()
+                            )
+                        )
+                        if (ActivityCompat.checkSelfPermission(
+                                applicationContext,
+                                Manifest.permission.BLUETOOTH_CONNECT
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            Toast.makeText(
+                                applicationContext,
+                                getString(R.string.we_need_bluetooth_permission_to_continue),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return
+                        }
+                        gatt?.readCharacteristic(
+                            gatt.getService(SENSOR_SERVICE_UUID)
+                                .getCharacteristic(TEMPERATURE_MEASUREMENT_UUID)
+                        )
                     }
                 }
             }
@@ -168,23 +211,29 @@ class BluetoothLEService: Service() {
             descriptor: BluetoothGattDescriptor?,
             status: Int
         ) {
-            if(status == BluetoothGatt.GATT_SUCCESS) {
-                if(descriptor?.characteristic == gatt?.getService(SENSOR_SERVICE_UUID)?.getCharacteristic(
-                        TEMPERATURE_MEASUREMENT_UUID)) {
-                    Log.d(BLUETOOTH_TAG,"onDescriptorWrite temperature finished")
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                if (descriptor?.characteristic == gatt?.getService(SENSOR_SERVICE_UUID)
+                        ?.getCharacteristic(
+                            TEMPERATURE_MEASUREMENT_UUID
+                        )
+                ) {
+                    Log.d(BLUETOOTH_TAG, "onDescriptorWrite temperature finished")
 
                     // get humidity characteristic
                     val characteristicHumidity = gatt?.getService(SENSOR_SERVICE_UUID)
                         ?.getCharacteristic(HUMIDITY_MEASUREMENT_UUID)
 
                     // enable humidity notification
-                    gatt?.let { characteristicHumidity?.let { it1 ->
-                        enableCharacteristicNotification(it,
-                            it1
-                        )
-                    } }
+                    gatt?.let {
+                        characteristicHumidity?.let { it1 ->
+                            enableCharacteristicNotification(
+                                it,
+                                it1
+                            )
+                        }
+                    }
                 } else {
-                    Log.d(BLUETOOTH_TAG,"onDescriptorWrite humidity finished")
+                    Log.d(BLUETOOTH_TAG, "onDescriptorWrite humidity finished")
                 }
             }
         }
@@ -202,11 +251,21 @@ class BluetoothLEService: Service() {
     /**
      * Connect BLE sensor
      */
-    @SuppressLint("MissingPermission")
     fun connectBLE(device: BluetoothDevice, context: Context) {
-        Log.d(BLUETOOTH_TAG,"connect ble called")
+        Log.d(BLUETOOTH_TAG, "connect ble called")
         try {
-            bluetoothGatt = device.connectGatt(context, false,gattClientCallback)
+            if (ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                Toast.makeText(
+                    applicationContext,
+                    getString(R.string.we_need_bluetooth_permission_to_continue), Toast.LENGTH_SHORT
+                ).show()
+                return
+            }
+            bluetoothGatt = device.connectGatt(context, false, gattClientCallback)
         } catch (exception: Exception) {
             Log.e(BLUETOOTH_TAG, "unable to connect ${exception.localizedMessage}")
         }
@@ -216,6 +275,17 @@ class BluetoothLEService: Service() {
      * Disconnect BLE sensor
      */
     fun disconnectBLE() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            Toast.makeText(
+                applicationContext,
+                getString(R.string.we_need_bluetooth_permission_to_continue), Toast.LENGTH_SHORT
+            ).show()
+            return
+        }
         bluetoothGatt?.disconnect()
         bluetoothGatt?.close()
         _connectedDevice.postValue(null)
@@ -227,17 +297,20 @@ class BluetoothLEService: Service() {
     private fun mockSensorData() {
         Log.d(BLUETOOTH_TAG, "mock sensor data is called")
         val temperatureRandom = Random.nextDouble(18.0, 28.0).toFloat()
-        val humidityRandom = Random.nextDouble(30.0,60.0).toFloat()
+        val humidityRandom = Random.nextDouble(30.0, 60.0).toFloat()
         val currentTime = LocalDateTime.now().toString()
-        voiceAlertService.raiseAlertForIndoor(temperature = temperatureRandom, humidity = humidityRandom)
-        _temperature.postValue(Temperature(temperatureRandom,currentTime))
+        voiceAlertService.raiseAlertForIndoor(
+            temperature = temperatureRandom,
+            humidity = humidityRandom
+        )
+        _temperature.postValue(Temperature(temperatureRandom, currentTime))
         _humidity.postValue(Humidity(humidityRandom, currentTime))
     }
 
     /**
      * function to decode sensor byte array data from Bluetooth stream
      */
-    private fun decodeSensorByteArray(fourBytes: ByteArray): Float{
+    private fun decodeSensorByteArray(fourBytes: ByteArray): Float {
         return java.lang.Float.intBitsToFloat(
             (fourBytes[3].toInt() and 0xFF shl 24) or
                     (fourBytes[2].toInt() and 0xFF shl 16) or
@@ -249,9 +322,26 @@ class BluetoothLEService: Service() {
     /**
      * Set up characteristic notification
      */
-    private fun enableCharacteristicNotification(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
+    @Suppress("DEPRECATION")
+    private fun enableCharacteristicNotification(
+        gatt: BluetoothGatt,
+        characteristic: BluetoothGattCharacteristic
+    ) {
         val askNotificationResult =
-            gatt.setCharacteristicNotification(characteristic, true)
+            if (ActivityCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                Toast.makeText(
+                    applicationContext,
+                    getString(R.string.we_need_bluetooth_permission_to_continue), Toast.LENGTH_SHORT
+                ).show()
+                return
+            } else {
+                gatt.setCharacteristicNotification(characteristic, true)
+            }
+
         if (askNotificationResult) {
             val descriptor =
                 characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_UUID)
@@ -266,13 +356,15 @@ class BluetoothLEService: Service() {
     /**
      * create a foreground notification to inform the user about the running state of service
      */
-    private fun addNotification(context: Context):Notification {
+    private fun addNotification(context: Context): Notification {
         val bluetoothChannel = "app_bluetooth_service"
         val serviceTitle = "Bluetooth Service"
         val pendingIntent: PendingIntent =
             Intent(context, MainActivity::class.java).let { intent ->
-                PendingIntent.getActivity(context,123 , intent,
-                    PendingIntent.FLAG_IMMUTABLE)
+                PendingIntent.getActivity(
+                    context, 123, intent,
+                    PendingIntent.FLAG_IMMUTABLE
+                )
             }
         val notification = Notification.Builder(context, bluetoothChannel)
             .setContentTitle(serviceTitle)
@@ -281,8 +373,10 @@ class BluetoothLEService: Service() {
             .setContentIntent(pendingIntent)
             .build()
 
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val notificationChannel = NotificationChannel(bluetoothChannel,serviceTitle, NotificationManager.IMPORTANCE_HIGH)
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationChannel =
+            NotificationChannel(bluetoothChannel, serviceTitle, NotificationManager.IMPORTANCE_HIGH)
         notificationManager.createNotificationChannel(notificationChannel)
         return notification
     }
@@ -290,10 +384,10 @@ class BluetoothLEService: Service() {
     /**
      * suspend function to get the first value of LiveData
      */
-    private suspend fun <T>LiveData<T>.awaitFirstValue(): T = withContext(Dispatchers.Main) {
+    private suspend fun <T> LiveData<T>.awaitFirstValue(): T = withContext(Dispatchers.Main) {
         suspendCancellableCoroutine { continuation ->
-            val observer = Observer<T> {
-                    value -> if (isActive) continuation.resume(value)
+            val observer = Observer<T> { value ->
+                if (isActive) continuation.resume(value)
             }
             observeForever(observer)
             continuation.invokeOnCancellation {
@@ -305,7 +399,7 @@ class BluetoothLEService: Service() {
     /**
      * upload sensor data to firebase
      */
-    private fun <T> uploadData(collection:String, data: LiveData<T>) {
+    private fun <T> uploadData(collection: String, data: LiveData<T>) {
         try {
             firebaseUploadScope.launch {
                 async {
@@ -329,10 +423,10 @@ class BluetoothLEService: Service() {
         initialize()
 
         // if mock is enabled, provides mocked sensor value every 10 seconds
-        if(ENABLE_MOCK) {
+        if (ENABLE_MOCK) {
             Timer().scheduleAtFixedRate(timerTask {
                 mockSensorData()
-            },0L, MINUTE_INTERVAL)
+            }, 0L, MINUTE_INTERVAL)
         }
     }
 
@@ -349,7 +443,7 @@ class BluetoothLEService: Service() {
             Timer().scheduleAtFixedRate(timerTask {
                 uploadData("temperature", temperature)
                 uploadData("humidity", humidity)
-            },0L, HOUR_INTERVAL)
+            }, 0L, HOUR_INTERVAL)
         }
 
         return START_STICKY
@@ -364,7 +458,7 @@ class BluetoothLEService: Service() {
         firebaseUploadScope.cancel()
     }
 
-    inner class LocalBinder: Binder() {
+    inner class LocalBinder : Binder() {
         // get the current instance of service class
         fun getService(): BluetoothLEService = this@BluetoothLEService
     }
@@ -372,8 +466,8 @@ class BluetoothLEService: Service() {
 
     companion object {
         const val ENABLE_MOCK: Boolean = false
-        const val HOUR_INTERVAL:Long = 3600000L
-        const val MINUTE_INTERVAL:Long = 60000L
+        const val HOUR_INTERVAL: Long = 3600000L
+        const val MINUTE_INTERVAL: Long = 60000L
     }
 
 }

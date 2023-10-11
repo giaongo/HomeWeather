@@ -1,8 +1,9 @@
 package fi.metropolia.homeweather.ui.views.components
 
-import android.annotation.SuppressLint
+import android.Manifest
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanResult
+import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -33,10 +34,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import fi.metropolia.homeweather.R
 import fi.metropolia.homeweather.ui.theme.HomeWeatherTheme
 import fi.metropolia.homeweather.ui.theme.Typography
 import fi.metropolia.homeweather.ui.theme.bluetooth_connected_card_bg
@@ -47,7 +51,6 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun PermissionHandler(
-    modifier: Modifier = Modifier,
     permissions: List<String>,
     onPermissionDenied: @Composable () -> Unit,
     content: @Composable () -> Unit,
@@ -73,7 +76,6 @@ fun PermissionHandler(
 }
 
 
-@SuppressLint("MissingPermission")
 @Composable
 fun BluetoothScannedDeviceCard(
     bluetoothLEService: BluetoothLEService,
@@ -112,29 +114,39 @@ fun BluetoothScannedDeviceCard(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.Center,
             ){
-                Text(text = result.device.name ?: "Unknown",
-                    modifier = Modifier.padding(vertical = 5.dp),
-                    style = Typography.titleSmall,
-                    maxLines = 2)
-                Text(text = result.device.address, modifier = Modifier.padding(vertical = 5.dp))
-                Button(onClick = {
-                    coroutineScope.launch {
-                        bluetoothLEService.connectBLE(result.device,context)
-                    }
-                },
-                    modifier = Modifier
-                        .align(Alignment.End),
-                    colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary)
-
+                if (ActivityCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.BLUETOOTH_CONNECT
+                    ) != PackageManager.PERMISSION_GRANTED
                 ) {
-                    Text(text = "CONNECT")
+                    Toast.makeText(context,
+                        stringResource(R.string.we_need_bluetooth_permission_to_continue),
+                        Toast.LENGTH_SHORT).show()
+                } else {
+                    Text(text = result.device.name ?: "Unknown",
+                        modifier = Modifier.padding(vertical = 5.dp),
+                        style = Typography.titleSmall,
+                        maxLines = 2)
+                    Text(text = result.device.address, modifier = Modifier.padding(vertical = 5.dp))
+                    Button(onClick = {
+                        coroutineScope.launch {
+                            bluetoothLEService.connectBLE(result.device,context)
+                        }
+                    },
+                        modifier = Modifier
+                            .align(Alignment.End),
+                        colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary)
+
+                    ) {
+                        Text(text = "CONNECT")
+                    }
                 }
+
             }
         }
     }
 }
 
-@SuppressLint("MissingPermission")
 @Composable
 fun BluetoothConnectedDeviceCard(
     bluetoothDevice:BluetoothDevice? = null,
@@ -156,13 +168,23 @@ fun BluetoothConnectedDeviceCard(
             Column(
                 verticalArrangement = Arrangement.Center
             ){
-                Text(text = bluetoothDevice?.name ?: "Unknown",
-                    modifier = Modifier.padding(vertical = 5.dp),
-                    style = Typography.titleSmall,
-                    color = Color.Black)
-                Text(text = bluetoothDevice?.address ?: "23",
-                    modifier = Modifier.padding(vertical = 5.dp),
-                    color = Color.Black)
+                if (ActivityCompat.checkSelfPermission(
+                        LocalContext.current,
+                        Manifest.permission.BLUETOOTH_CONNECT
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    Toast.makeText(LocalContext.current,
+                        stringResource(R.string.we_need_bluetooth_permission_to_continue),
+                        Toast.LENGTH_SHORT).show()
+                } else {
+                    Text(text = bluetoothDevice?.name ?: "Unknown",
+                        modifier = Modifier.padding(vertical = 5.dp),
+                        style = Typography.titleSmall,
+                        color = Color.Black)
+                    Text(text = bluetoothDevice?.address ?: "23",
+                        modifier = Modifier.padding(vertical = 5.dp),
+                        color = Color.Black)
+                }
             }
             Button(onClick = { bluetoothLEService.disconnectBLE()},
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Black),

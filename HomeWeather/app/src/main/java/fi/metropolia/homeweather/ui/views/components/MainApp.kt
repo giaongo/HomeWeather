@@ -100,7 +100,7 @@ fun MainApp(appViewModel: AppViewModel) {
         ),
 
         )
-    Surface () {
+    Surface {
         ModalNavigationDrawer(
             drawerContent = {
                 ModalDrawerSheet {

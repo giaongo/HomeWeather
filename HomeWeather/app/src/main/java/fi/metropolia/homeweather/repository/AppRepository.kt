@@ -30,7 +30,7 @@ object AppRepository {
     /**
      * post document to Firebase
      */
-    suspend fun postFirebaseData(collectionName: String, dataToPost: Any) {
+    fun postFirebaseData(collectionName: String, dataToPost: Any) {
         val db = FirebaseFirestore.getInstance()
         val dbCollection: CollectionReference = db.collection(collectionName)
 
@@ -38,7 +38,7 @@ object AppRepository {
             Log.d(TAG, "DocumentSnapshot added with ID: ${documentReference.id}")
         }
             .addOnFailureListener { e ->
-                Log.e(TAG, "Error adding document to $collectionName")
+                Log.e(TAG, "Error adding document to $collectionName: $e")
             }
     }
 
@@ -46,7 +46,7 @@ object AppRepository {
      * Fetch the documentId of a document according to fieldData of the document
      */
     suspend fun getFireBaseDocumentId(fieldName: String, fieldData: Any, collectionName: String): String {
-        var db = FirebaseFirestore.getInstance()
+        val db = FirebaseFirestore.getInstance()
 
         try {
             val querySnapshot = db.collection(collectionName)
@@ -73,14 +73,14 @@ object AppRepository {
     /**
      * Update the fieldData according to document Id
      */
-    suspend fun updateDocument(fieldName: String, documentId: String, collectionName: String, fieldData: Any) {
-        var db = FirebaseFirestore.getInstance()
+    fun updateDocument(fieldName: String, documentId: String, collectionName: String, fieldData: Any) {
+        val db = FirebaseFirestore.getInstance()
         val dbCollection: CollectionReference = db.collection(collectionName)
         dbCollection.document(documentId).update(fieldName,fieldData).addOnSuccessListener {
-            Log.d(TAG, "DocumentSnapshot updated with ID: ${documentId}")
+            Log.d(TAG, "DocumentSnapshot updated with ID: $documentId")
         }
             .addOnFailureListener { e ->
-                Log.e(TAG, "Error adding document to $collectionName")
+                Log.e(TAG, "Error adding document to $collectionName: $e")
             }
     }
 }

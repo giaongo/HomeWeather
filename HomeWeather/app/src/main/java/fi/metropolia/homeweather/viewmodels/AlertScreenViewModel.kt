@@ -29,7 +29,7 @@ class AlertScreenViewModel: ViewModel() {
     /**
      * Update data to the firebase
      */
-    suspend fun updateFireBaseData (fieldName: String, documentId: String, collectionName: String, fieldData: Any) {
+    fun updateFireBaseData (fieldName: String, documentId: String, collectionName: String, fieldData: Any) {
         AppRepository.updateDocument(fieldName, documentId,collectionName, fieldData)
     }
 

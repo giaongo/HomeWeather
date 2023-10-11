@@ -22,4 +22,6 @@
     <string name="dry">Kuiva</string>
     <string name="standard">Normaali ilmankosteus</string>
     <string name="moist">Kostea</string>
+    <string name="we_need_bluetooth_permission_to_continue">Tarvitsemme Bluetooth-luvan jatkaaksemme</string>
+    <string name="we_require_the_necessary_permissions_to_initiate_the_application">Tarvitsemme tarvittavat luvat sovelluksen käynnistämiseksi</string>
 </resources>
