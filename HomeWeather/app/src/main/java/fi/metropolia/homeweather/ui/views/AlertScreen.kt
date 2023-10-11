@@ -1,5 +1,6 @@
 package fi.metropolia.homeweather.ui.views
 
+import android.widget.Toast
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.TweenSpec
@@ -24,9 +25,9 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,15 +41,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
+import fi.metropolia.homeweather.R
 import fi.metropolia.homeweather.dataclass.VoiceAlert
 import fi.metropolia.homeweather.ui.theme.bluetooth_connected_card_bg
 import fi.metropolia.homeweather.ui.theme.gradient_alert
 import fi.metropolia.homeweather.ui.theme.md_theme_dark_onPrimaryContainer
 import fi.metropolia.homeweather.ui.theme.md_theme_light_surfaceTint
+import fi.metropolia.homeweather.util.service.CallService
 import fi.metropolia.homeweather.viewmodels.AlertScreenViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -64,6 +69,8 @@ fun AlertScreen() {
     val textAlpha = remember { Animatable(0f) }
     val dividerAlpha = remember { Animatable(0f) }
     val coroutineScope = rememberCoroutineScope()
+    var inputNumber by remember { mutableStateOf(CallService.getNumber()) }
+    val context = LocalContext.current
 
     val fadeInOut = TweenSpec<Float>(
         durationMillis = 500,
@@ -83,9 +90,45 @@ fun AlertScreen() {
 
     Column {
         Text(
-            text = "Indoor Environment Alert",
+            text = stringResource(R.string.indoor_environment_alert),
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(start = 8.dp, top = 16.dp).alpha(textAlpha.value))
+            modifier = Modifier
+                .padding(start = 8.dp, top = 16.dp)
+                .alpha(textAlpha.value)
+        )
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            OutlinedTextField(
+                value = inputNumber,
+                onValueChange = { newText -> inputNumber = newText },
+                label = { Text(stringResource(R.string.emergency_number)) },
+                colors = OutlinedTextFieldDefaults.colors(
+                    cursorColor = Color.Gray,
+                    focusedBorderColor = Color.Gray,
+                    focusedLabelColor = Color.Gray,
+                ),
+                modifier = Modifier
+                    .fillMaxWidth(0.6f)
+                    .padding(16.dp)
+            )
+            Button(onClick = {
+                CallService.updateNumber(inputNumber)
+                Toast.makeText(
+                    context,
+                    context.getString(R.string.emergency_number_added, inputNumber),
+                    Toast.LENGTH_SHORT
+                )
+                    .show()
+                inputNumber = ""
+            }) {
+                Text(text = "Add")
+            }
+        }
+
+
         Divider(
             modifier = Modifier
                 .fillMaxWidth(0.8f)
@@ -94,14 +137,19 @@ fun AlertScreen() {
             color = Color.Gray,
             thickness = 2.dp
         )
-        LazyVerticalStaggeredGrid (
+        LazyVerticalStaggeredGrid(
             columns = StaggeredGridCells.Fixed(2),
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background),
             content = {
                 items(alertList ?: listOf()) { alert ->
-                    AlertCard(message = alert.message, timestamp = alert.timestamp, info = alert.info, alertScreenViewModel)
+                    AlertCard(
+                        message = alert.message,
+                        timestamp = alert.timestamp,
+                        info = alert.info,
+                        alertScreenViewModel
+                    )
 
                 }
             }
@@ -110,7 +158,12 @@ fun AlertScreen() {
 }
 
 @Composable
-fun AlertCard(message: String, timestamp: String, info: String, alertScreenViewModel: AlertScreenViewModel) {
+fun AlertCard(
+    message: String,
+    timestamp: String,
+    info: String,
+    alertScreenViewModel: AlertScreenViewModel
+) {
     val parsedPattern = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
     val parseLocalDateTemp = LocalDateTime.parse(timestamp, parsedPattern)
     val formattedTime =
@@ -170,26 +223,36 @@ fun AlertCard(message: String, timestamp: String, info: String, alertScreenViewM
 
 @Composable
 fun Modal(fieldData: String, alertScreenViewModel: AlertScreenViewModel) {
-    var openPopup by remember { mutableStateOf(false)
+    var openPopup by remember {
+        mutableStateOf(false)
     }
     var text by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
     var documentId by remember { mutableStateOf("") }
     LaunchedEffect(key1 = fieldData) {
         coroutineScope.launch {
-            documentId = alertScreenViewModel.getDocumentId(fieldName = "timestamp", fieldData = fieldData, collectionName = "alert")
+            documentId = alertScreenViewModel.getDocumentId(
+                fieldName = "timestamp",
+                fieldData = fieldData,
+                collectionName = "alert"
+            )
         }
     }
 
 
-    Surface(onClick = { openPopup = true}) {
+    Surface(onClick = { openPopup = true }) {
         Text(text = "Add Info")
     }
 
     if (openPopup) {
-        Popup(alignment = Alignment.Center, properties = PopupProperties(focusable = true, dismissOnClickOutside = true)) {
-            Column(verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,) {
+        Popup(
+            alignment = Alignment.Center,
+            properties = PopupProperties(focusable = true, dismissOnClickOutside = true)
+        ) {
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
                 Box(
                     modifier = Modifier
                         .padding(40.dp)
@@ -211,7 +274,8 @@ fun Modal(fieldData: String, alertScreenViewModel: AlertScreenViewModel) {
                             OutlinedTextField(
                                 value = text,
                                 onValueChange = { text = it },
-                                label = { Text("Add Info")
+                                label = {
+                                    Text("Add Info")
                                 }, modifier = Modifier
                                     .height(400.dp)
                                     .padding(20.dp)
@@ -222,8 +286,13 @@ fun Modal(fieldData: String, alertScreenViewModel: AlertScreenViewModel) {
                             Row(modifier = Modifier.padding(10.dp)) {
                                 Button(onClick = {
                                     coroutineScope.launch {
-                                        if(documentId != "") {
-                                            updateData(documentId = documentId, fieldData = text, fieldName = "info", collectionName = "alert")
+                                        if (documentId != "") {
+                                            updateData(
+                                                documentId = documentId,
+                                                fieldData = text,
+                                                fieldName = "info",
+                                                collectionName = "alert"
+                                            )
                                             text = ""
                                             alertScreenViewModel.refresh()
                                         }
@@ -257,5 +326,10 @@ fun updateData(fieldName: String, documentId: String, collectionName: String, fi
 @Preview(showBackground = true)
 @Composable
 fun AlertCardPreview() {
-    AlertCard("test", "2021-10-12T12:12:12.000000", info = "info", alertScreenViewModel = AlertScreenViewModel())
+    AlertCard(
+        "test",
+        "2021-10-12T12:12:12.000000",
+        info = "info",
+        alertScreenViewModel = AlertScreenViewModel()
+    )
 }

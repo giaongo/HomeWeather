@@ -296,8 +296,8 @@ class BluetoothLEService : Service() {
      */
     private fun mockSensorData() {
         Log.d(BLUETOOTH_TAG, "mock sensor data is called")
-        val temperatureRandom = Random.nextDouble(18.0, 28.0).toFloat()
-        val humidityRandom = Random.nextDouble(30.0, 60.0).toFloat()
+        val temperatureRandom = Random.nextDouble(15.0, 22.0).toFloat()
+        val humidityRandom = Random.nextDouble(30.0, 50.0).toFloat()
         val currentTime = LocalDateTime.now().toString()
         voiceAlertService.raiseAlertForIndoor(
             temperature = temperatureRandom,

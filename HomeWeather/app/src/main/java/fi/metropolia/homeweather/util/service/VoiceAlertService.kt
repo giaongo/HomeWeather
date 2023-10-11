@@ -8,11 +8,12 @@ import fi.metropolia.homeweather.repository.AppRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.LocalDateTime
 import java.util.Locale
-
-class VoiceAlertService(context: Context) {
+class VoiceAlertService(val context: Context) {
     private var textToSpeech: TextToSpeech? = null
     private var enableAlert:Boolean = true
     private val alertServiceScope = CoroutineScope(Dispatchers.IO)
@@ -28,7 +29,13 @@ class VoiceAlertService(context: Context) {
     }
 
     private fun speak(text: String) {
-        textToSpeech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        alertServiceScope.launch {
+            withContext(Dispatchers.Default) {
+                textToSpeech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+                delay(10000)
+                CallService.triggerEmergencyCall(context = context)
+            }
+        }
         alertServiceScope.launch {
             AppRepository.postFirebaseData("alert", VoiceAlert(text, LocalDateTime.now().toString()))
         }
