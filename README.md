@@ -33,7 +33,7 @@ OR
 
 OR
 
-- Install [Insert APK file here]
+- Install this [APK File](https://drive.google.com/file/d/1GehuS3wvuHBRAyPQAe7n5OE1hLzgRoBW/view?usp=drive_link) to your android phone
 
 ## Usage
 
