@@ -23,4 +23,7 @@
     <string name="moist">Moist</string>
     <string name="we_need_bluetooth_permission_to_continue">We need bluetooth permission to continue</string>
     <string name="we_require_the_necessary_permissions_to_initiate_the_application">We require the necessary permissions to initiate the application</string>
+    <string name="emergency_number_added">Emergency Number: %1$s added</string>
+    <string name="emergency_number">Emergency Number</string>
+    <string name="indoor_environment_alert">Indoor Environment Alert</string>
 </resources>

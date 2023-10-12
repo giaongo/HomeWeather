@@ -23,6 +23,7 @@ import fi.metropolia.homeweather.ui.theme.HomeWeatherTheme
 import fi.metropolia.homeweather.ui.views.components.MainApp
 import fi.metropolia.homeweather.ui.views.components.PermissionHandler
 import fi.metropolia.homeweather.util.service.BluetoothLEService
+import fi.metropolia.homeweather.util.service.CallService
 import fi.metropolia.homeweather.viewmodels.AppViewModel
 
 class MainActivity : ComponentActivity() {
@@ -32,7 +33,9 @@ class MainActivity : ComponentActivity() {
         Manifest.permission.BLUETOOTH,
         Manifest.permission.BLUETOOTH_CONNECT,
         Manifest.permission.BLUETOOTH_ADMIN,
-        Manifest.permission.ACCESS_FINE_LOCATION
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+        Manifest.permission.CALL_PHONE
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -66,6 +69,20 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        getSharedPreferences("alert", MODE_PRIVATE).getString("number", "")?.let {
+            CallService.updateNumber(it)
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+       getSharedPreferences("alert", MODE_PRIVATE)
+           .edit()
+           .putString("number", CallService.getNumber()).apply()
     }
 
     override fun onDestroy() {

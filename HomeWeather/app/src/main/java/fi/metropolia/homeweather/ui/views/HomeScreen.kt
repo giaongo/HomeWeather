@@ -39,7 +39,7 @@ import fi.metropolia.homeweather.R
 import fi.metropolia.homeweather.dataclass.Humidity
 import fi.metropolia.homeweather.dataclass.Temperature
 import fi.metropolia.homeweather.viewmodels.WeatherAPIViewModel
-import getUserLocation
+import fi.metropolia.homeweather.util.service.getUserLocation
 import java.time.LocalDateTime
 import java.util.Timer
 import kotlin.concurrent.timerTask

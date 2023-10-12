@@ -46,7 +46,7 @@ void loop() {
       digitalWrite(LED_BUILTIN,HIGH);
       while(central.connected()) {
         long currentMillis = millis();
-        if(currentMillis - previousMillis >= 60000) {
+        if(currentMillis - previousMillis >= 10000) {
           previousMillis = currentMillis;
           humidity = dht.readHumidity();
           temperature = dht.readTemperature();

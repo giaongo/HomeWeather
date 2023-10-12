@@ -24,4 +24,7 @@
     <string name="moist">Kostea</string>
     <string name="we_need_bluetooth_permission_to_continue">Tarvitsemme Bluetooth-luvan jatkaaksemme</string>
     <string name="we_require_the_necessary_permissions_to_initiate_the_application">Tarvitsemme tarvittavat luvat sovelluksen käynnistämiseksi</string>
+    <string name="emergency_number_added">Hätänumero: %1$s lisätty</string>
+    <string name="emergency_number">Hätänumero</string>
+    <string name="indoor_environment_alert">Sisätila-olosuhdevaroitus</string>
 </resources>
