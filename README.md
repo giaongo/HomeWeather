@@ -92,7 +92,9 @@ Contributions are welcome! Here's how you can contribute to the project:
 
 ## Video Demo
 
-Link to video here
+Click the video to watch
+
+[![](https://img.youtube.com/vi/wbvtO4DTXSM/maxresdefault.jpg)](https://www.youtube.com/watch?v=wbvtO4DTXSM&ab_channel=GiaoNg%C3%B4)
 
 ## Thumbnails
 <img src="https://github.com/giaongo/HomeWeather/assets/91269635/f151933e-81b4-447f-a004-2fddfc37c3db" height="500"/>
