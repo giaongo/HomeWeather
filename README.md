@@ -21,6 +21,7 @@ HomeWeather is an android mobile sensor-based application utilizing DHT22 temper
 
 - [Android Studio](https://developer.android.com/studio) installed on your machine
 - Android device or emulator for testing
+- Enable Bluetooth mock sensor data by going to BluetoothLEService class -> go down to companion object class at the end of the page -> set ENABLE_MOCK = true -> Now you will have sensor data that is mockly generated every 10 seconds. You can view the change of sensor data in HomeScreen
 
 OR 
 - Android phone
