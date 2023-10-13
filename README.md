@@ -59,7 +59,7 @@ HomeWeather allows users to:
 ## Components
 
 - Jetpack Compose
-- Firebase Firestone
+- Firebase Firestore
 - Material Design 3
 - Bluetooth Connection
 - Foreground Service
