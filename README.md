@@ -24,6 +24,9 @@ HomeWeather is an android mobile sensor-based application utilizing DHT22 temper
 
 OR 
 - Android phone
+- Arduino board MKR1010 and DHT22 sensor. Please check this documentation for extra information:
+  1. [Arduino MKR1010](https://docs.arduino.cc/hardware/mkr-wifi-1010)
+  2. [DHT22 with Arduino](https://www.instructables.com/How-to-use-DHT-22-sensor-Arduino-Tutorial/)
 
 ### Installation
 
